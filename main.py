@@ -4,10 +4,10 @@ import discord
 from discord import app_commands
 
 from hillkeeper.config import get_env
-from hillkeeper.commands import register_commands
-from hillkeeper.events import register_events
-from hillkeeper.tasks import register_tasks
-from hillkeeper.services import attendance_messages
+from hillkeeper.bot.commands import register_commands
+from hillkeeper.bot.events import register_events
+from hillkeeper.bot.tasks import register_tasks
+from hillkeeper.services.attendance import attendance_messages
 
 # 로깅 설정
 logging.basicConfig(

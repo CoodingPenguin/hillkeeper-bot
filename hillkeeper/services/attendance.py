@@ -1,9 +1,9 @@
 """비즈니스 로직 모듈"""
 import logging
 
-from .config import EMOJI_CHECK, EMOJI_CROSS
-from .messages import MESSAGE_MORNING_CHECK, MESSAGE_EVENING_REMINDER, MESSAGE_NO_PARTICIPANTS
-from .utils import get_users_who_reacted
+from ..config import EMOJI_CHECK, EMOJI_CROSS
+from ..messages import MESSAGE_MORNING_CHECK, MESSAGE_EVENING_REMINDER, MESSAGE_NO_PARTICIPANTS
+from ..utils import get_users_who_reacted
 
 logger = logging.getLogger('hillkeeper-bot')
 

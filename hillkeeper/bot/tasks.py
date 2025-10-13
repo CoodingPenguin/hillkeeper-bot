@@ -3,8 +3,8 @@ import datetime
 import logging
 from discord.ext import tasks
 
-from .config import KST, THURSDAY, get_env
-from .services import send_morning_check, send_evening_reminder
+from ..config import KST, THURSDAY, get_env
+from ..services.attendance import send_morning_check, send_evening_reminder
 
 logger = logging.getLogger('hillkeeper-bot')
 
