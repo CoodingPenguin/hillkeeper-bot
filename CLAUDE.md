@@ -175,6 +175,7 @@ DISCORD_TOKEN=your_token_here
 # Channels & Roles
 ATTENDANCE_CHANNEL_ID=channel_id
 RETROSPECTIVE_ROLE_ID=role_id
+VOICE_CHANNEL_ID=voice_channel_id
 
 # Redis (Render Key-Value Store)
 REDIS_URL=redis://default:password@host:port

@@ -1,7 +1,7 @@
 import logging
 
-from ..config import EMOJI_CHECK, EMOJI_CROSS
-from ..messages import MESSAGE_MORNING_CHECK, MESSAGE_EVENING_REMINDER, MESSAGE_NO_PARTICIPANTS
+from ..config import EMOJI_CHECK, EMOJI_CROSS, get_env
+from ..messages import create_morning_check_embed, create_evening_reminder_embed, create_no_participants_embed
 from ..utils import get_users_who_reacted
 from . import repository
 
@@ -25,8 +25,9 @@ async def send_morning_check(bot, channel_id: str, role_id: str):
             logger.error(f"Channel not found: {channel_id}")
             return
 
-        message_text = MESSAGE_MORNING_CHECK.format(role_id=role_id)
-        message = await channel.send(message_text)
+        voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
+        content, embed = create_morning_check_embed(int(role_id), int(voice_channel_id))
+        message = await channel.send(content=content, embed=embed)
 
         await message.add_reaction(EMOJI_CHECK)
         await message.add_reaction(EMOJI_CROSS)
@@ -90,12 +91,16 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
                 await repository.delete_event(message_id)
 
         # 리마인더 메시지 전송
+        voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
+
         if participated_members:
             mentions = " ".join([member.mention for member in participated_members])
-            await channel.send(MESSAGE_EVENING_REMINDER.format(mentions=mentions))
+            content, embed = create_evening_reminder_embed(mentions, int(voice_channel_id))
+            await channel.send(content=content, embed=embed)
             logger.info(f"Evening reminder sent to {len(participated_members)} members")
         else:
-            await channel.send(MESSAGE_NO_PARTICIPANTS)
+            embed = create_no_participants_embed()
+            await channel.send(embed=embed)
             logger.info("No members checked in")
 
     except Exception as e:
