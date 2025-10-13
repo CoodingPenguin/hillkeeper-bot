@@ -23,8 +23,12 @@ async def send_morning_check(bot, channel_id: str, role_id: str):
         await message.add_reaction(EMOJI_CHECK)
         await message.add_reaction(EMOJI_CROSS)
 
-        # Redis에 저장
-        await repository.save_message(message.id, channel_id=channel.id)
+        # Redis에 이벤트 저장 (7일 보관)
+        await repository.save_event(
+            message.id,
+            channel_id=channel.id,
+            role_id=int(role_id)
+        )
 
         logger.info(f"Morning check message sent: {message.id}")
 
@@ -47,8 +51,8 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
             logger.error(f"Role not found: {role_id}")
             return
 
-        # Redis에서 메시지 ID 가져오기
-        message_ids = await repository.get_all_messages()
+        # Redis에서 오늘 메시지 ID 가져오기
+        message_ids = await repository.get_today_messages()
 
         # 참여한 멤버 수집
         participated_members = set()
@@ -66,7 +70,7 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
             except Exception as e:
                 logger.error(f"Failed to fetch message {message_id}: {e}")
                 # 실패한 메시지는 Redis에서 삭제
-                await repository.delete_message(message_id)
+                await repository.delete_event(message_id)
 
         # 리마인더 메시지 전송
         if participated_members:
@@ -77,8 +81,8 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
             await channel.send(MESSAGE_NO_PARTICIPANTS)
             logger.info("No members checked in")
 
-        # Redis 정리
-        await repository.clear_all_messages()
+        # 오늘 이벤트는 유지 (7일 보관)
+        # clear_today_events() 호출 안 함
 
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")
