@@ -1,4 +1,4 @@
-"""작업 스케줄링 모듈"""
+"""task 스케쥴링 설정"""
 import datetime
 import logging
 from discord.ext import tasks

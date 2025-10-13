@@ -1,4 +1,4 @@
-"""Slash 명령어 모듈"""
+"""slash 명령어 설정"""
 import logging
 import discord
 

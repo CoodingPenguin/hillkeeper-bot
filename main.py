@@ -1,4 +1,3 @@
-"""언덕지기 봇 메인 진입점"""
 import logging
 import discord
 from discord import app_commands
@@ -45,8 +44,8 @@ def main():
     # 봇 인스턴스 생성
     bot = HillkeeperBot()
 
-    # 이벤트 핸들러 등록 (Redis 기반으로 변경되어 attendance_messages는 불필요)
-    register_events(bot, {})
+    # 이벤트 핸들러 등록
+    register_events(bot)
 
     # 명령어 등록
     register_commands(bot)

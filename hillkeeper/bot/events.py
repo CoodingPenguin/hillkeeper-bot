@@ -1,10 +1,13 @@
-"""이벤트 핸들러 모듈"""
+"""discord 이벤트 핸들러"""
 import logging
+
+from ..config import EMOJI_CHECK, EMOJI_CROSS
+from ..attendance import repository
 
 logger = logging.getLogger('hillkeeper')
 
 
-def register_events(bot, attendance_messages: dict):
+def register_events(bot):
     """봇에 이벤트 핸들러를 등록합니다."""
 
     @bot.event
@@ -19,7 +22,26 @@ def register_events(bot, attendance_messages: dict):
         if payload.user_id == bot.user.id:
             return
 
-        if payload.message_id not in attendance_messages:
+        # ✅ 또는 ❌ 반응만 처리
+        if str(payload.emoji) not in [EMOJI_CHECK, EMOJI_CROSS]:
             return
 
-        logger.info(f"User {payload.user_id} reacted with {payload.emoji} to attendance check")
+        # 사용자 정보 가져오기
+        guild = bot.get_guild(payload.guild_id)
+        if not guild:
+            return
+
+        member = guild.get_member(payload.user_id)
+        if not member:
+            return
+
+        # Redis에 응답 저장
+        response = "yes" if str(payload.emoji) == EMOJI_CHECK else "no"
+        await repository.save_response(
+            payload.message_id,
+            payload.user_id,
+            username=member.display_name,
+            response=response
+        )
+
+        logger.info(f"User {member.display_name} ({payload.user_id}) reacted with {payload.emoji}")

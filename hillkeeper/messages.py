@@ -1,4 +1,4 @@
-"""메시지 템플릿 모듈"""
+"""메시지 템플릿"""
 from .config import EMOJI_CHECK, EMOJI_CROSS, EMOJI_MIC
 
 # 아침 출석 체크 메시지

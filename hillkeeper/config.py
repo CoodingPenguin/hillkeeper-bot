@@ -1,4 +1,4 @@
-"""설정 및 상수 관리 모듈"""
+"""설정 및 상수 관리"""
 import os
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ load_dotenv()
 KST = ZoneInfo("Asia/Seoul")
 
 # 요일 상수
-THURSDAY = 3  # 0=월요일, 3=목요일
+THURSDAY = 3
 
 # 이모지 상수
 EMOJI_CHECK = "✅"

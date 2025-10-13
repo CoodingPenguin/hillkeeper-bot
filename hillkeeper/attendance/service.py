@@ -1,4 +1,3 @@
-"""출석 비즈니스 로직 모듈"""
 import logging
 
 from ..config import EMOJI_CHECK, EMOJI_CROSS

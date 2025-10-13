@@ -192,25 +192,84 @@ async def my_task():
 
 ### Event Handlers
 ```python
-def register_events(bot, data):
+def register_events(bot):
     @bot.event
     async def on_ready():
         logger.info(f'Bot is ready: {bot.user}')
+
+    @bot.event
+    async def on_raw_reaction_add(payload):
+        # Save user reactions to Redis
+        ...
 ```
 
 ## Redis Patterns
 
-### Functional Repository
+### Data Storage Strategy
+- **Storage Type**: Redis as primary storage (not just cache)
+- **TTL**: 7 days (604800 seconds)
+- **Reason**: Budget constraints, small scale (4 users)
+- **Auto-cleanup**: Redis TTL handles expiration
+
+### Key Structure
+```redis
+# Attendance event (7 days TTL)
+attendance:event:{date}:{message_id}
+  - message_id, channel_id, role_id, created_at
+
+# User response (7 days TTL)
+attendance:response:{message_id}:{user_id}
+  - user_id, username, response (yes/no), timestamp
+```
+
+### Repository Pattern (Functional)
 ```python
 # repository.py
-async def save_message(message_id: int, *, channel_id: int):
-    key = f"attendance:message:{message_id}"
-    await redis_client.client.hset(key, mapping={...})
-    await redis_client.client.expire(key, 86400)
+TTL_7_DAYS = 604800
 
-# service.py - usage
+async def save_event(message_id: int, *, channel_id: int, role_id: int):
+    date = datetime.now(KST).date()
+    key = f"attendance:event:{date}:{message_id}"
+    await redis_client.client.hset(key, mapping={...})
+    await redis_client.client.expire(key, TTL_7_DAYS)
+
+async def save_response(message_id: int, user_id: int, *, username: str, response: str):
+    key = f"attendance:response:{message_id}:{user_id}"
+    await redis_client.client.hset(key, mapping={...})
+    await redis_client.client.expire(key, TTL_7_DAYS)
+
+async def get_today_messages() -> list[int]:
+    date = datetime.now(KST).date()
+    pattern = f"attendance:event:{date}:*"
+    # SCAN is fine for small scale (4 users)
+    async for key in redis_client.client.scan_iter(match=pattern):
+        ...
+```
+
+### Usage in Service Layer
+```python
+# service.py
 from . import repository
-await repository.save_message(msg.id, channel_id=channel.id)
+
+# Save event
+await repository.save_event(msg.id, channel_id=channel.id, role_id=int(role_id))
+
+# Get today's messages
+message_ids = await repository.get_today_messages()
+```
+
+### Event Handler Integration
+```python
+# events.py - Save user reactions to Redis
+@bot.event
+async def on_raw_reaction_add(payload):
+    response = "yes" if str(payload.emoji) == EMOJI_CHECK else "no"
+    await repository.save_response(
+        payload.message_id,
+        payload.user_id,
+        username=member.display_name,
+        response=response
+    )
 ```
 
 ## Frequently Asked Questions
