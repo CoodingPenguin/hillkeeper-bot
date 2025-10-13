@@ -1,0 +1,255 @@
+# Claude Code Working Guidelines
+
+This document defines the rules and context that Claude Code should follow when working on the hillkeeper-bot project.
+
+## Project Overview
+
+**hillkeeper-bot** is a Discord bot for managing attendance at weekly retrospective meetings.
+
+### Key Features
+- **Thursday 9:00 AM KST**: Send attendance check message mentioning `@회고` role with ✅/❌ emoji reactions
+- **Thursday 9:45 PM KST**: Send reminder mentioning only participants who checked in
+
+### Tech Stack
+- Python 3.13+
+- discord.py (Slash Commands)
+- Redis (Render Key-Value Store)
+- Poetry (dependency management)
+- Deployment: Render
+
+## Project Structure
+
+```
+hillkeeper-bot/
+├── main.py                      # Entry point
+├── hillkeeper/
+│   ├── config.py               # Configuration + constants
+│   ├── messages.py             # Message templates
+│   ├── utils.py                # Discord utilities
+│   ├── attendance/             # Attendance domain
+│   │   ├── repository.py      # Data access (functional)
+│   │   └── service.py         # Business logic
+│   ├── database/               # Infrastructure
+│   │   └── redis.py           # Redis client
+│   └── bot/                    # Discord interface
+│       ├── commands.py        # Slash commands
+│       ├── events.py          # Event handlers
+│       └── tasks.py           # Scheduled tasks
+├── pyproject.toml
+└── poetry.lock
+```
+
+### Architecture Principles
+
+**Domain-Driven Design (DDD)**
+- `attendance/`: Domain logic (repository + service)
+- `database/`: Infrastructure layer (Redis connection)
+- `bot/`: Interface layer (Discord)
+
+**Layer Separation**
+```
+bot/ (Interface)
+    ↓
+attendance/service.py (Business Logic)
+    ↓
+attendance/repository.py (Data Access)
+    ↓
+database/redis.py (Infrastructure)
+```
+
+## Coding Style
+
+### Python Version
+- Use Python 3.13+ syntax
+- `Optional[T]` → `T | None`
+- `Set[T]` → `set[T]`
+- `Dict[K, V]` → `dict[K, V]`
+
+### Code Style
+- **Docstrings**: Korean, ending with `~다.`
+- **Log messages**: English
+- **Logger name**: `'hillkeeper'` (unified)
+- **Function parameters**: Use keyword-only args with `*` for important parameters
+- **Comments**: Concise and clear, no separator lines like `====`
+
+### Import Style
+```python
+# Standard library
+import logging
+import datetime
+
+# Third-party
+import discord
+from discord import app_commands
+
+# Internal modules
+from ..config import get_env
+from . import repository
+```
+
+### Functional vs Class
+- **Repository**: Functional (collection of functions, not class)
+- **Client/Service**: Classes are acceptable, but prefer functional if simple
+
+## Git Commit Rules
+
+### 🔴 IMPORTANT: Always commit after making changes
+
+**Principles:**
+- Commit immediately after completing work
+- Group logically related changes together
+- For large tasks, commit intermediate steps
+
+**Commit Message Format:**
+```
+<Title: Brief summary of what was done>
+
+- Change 1
+- Change 2
+- Change 3
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Example:**
+```bash
+git commit -m "$(cat <<'EOF'
+Add Redis integration with functional repository pattern
+
+- Created RedisClient for connection management
+- Implemented functional repository for attendance data
+- Updated service layer to use repository functions
+- Added Redis initialization in main.py
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+## Environment Variables
+
+### Required Variables
+```bash
+# Discord
+DISCORD_TOKEN=your_token_here
+
+# Channels & Roles
+ATTENDANCE_CHANNEL_ID=channel_id
+RETROSPECTIVE_ROLE_ID=role_id
+
+# Redis (Render Key-Value Store)
+REDIS_URL=redis://default:password@host:port
+
+# Optional - for testing
+TEST_CHANNEL_ID=test_channel_id
+```
+
+### Redis Configuration
+- **Local development**: External URL + Allow all IPs (`0.0.0.0/0`)
+- **Render deployment**: Internal URL (no IP restriction needed)
+
+## Work Checklist
+
+### Before Modifying Files
+1. ✅ Read the file first (`Read` tool)
+2. ✅ Consider concurrent editing (user might be editing too)
+
+### When Writing Code
+1. ✅ Use Python 3.13+ syntax
+2. ✅ Korean docstrings (ending with `~다.`)
+3. ✅ English log messages
+4. ✅ Logger name: `'hillkeeper'`
+5. ✅ Use relative imports (`..`, `.`)
+
+### After Completion
+1. ✅ Check syntax: `python -m py_compile`
+2. ✅ **Commit immediately** 🔴
+3. ✅ Write clear commit message describing changes
+
+## Discord.py Patterns
+
+### Slash Commands
+```python
+@bot.tree.command(name="command_name", description="Description")
+async def command_name(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    # ... logic
+    await interaction.followup.send("Message", ephemeral=True)
+```
+
+### Scheduled Tasks
+```python
+from discord.ext import tasks
+
+@tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=KST))
+async def my_task():
+    # ... logic
+```
+
+### Event Handlers
+```python
+def register_events(bot, data):
+    @bot.event
+    async def on_ready():
+        logger.info(f'Bot is ready: {bot.user}')
+```
+
+## Redis Patterns
+
+### Functional Repository
+```python
+# repository.py
+async def save_message(message_id: int, *, channel_id: int):
+    key = f"attendance:message:{message_id}"
+    await redis_client.client.hset(key, mapping={...})
+    await redis_client.client.expire(key, 86400)
+
+# service.py - usage
+from . import repository
+await repository.save_message(msg.id, channel_id=channel.id)
+```
+
+## Frequently Asked Questions
+
+### Q: How to add a new domain?
+A: Create a new folder under `hillkeeper/` (e.g., `voting/`)
+```
+hillkeeper/
+├── voting/
+│   ├── repository.py
+│   └── service.py
+```
+
+### Q: How to add new infrastructure?
+A: Add under `database/` (e.g., `postgresql.py`)
+
+### Q: Why functional repository instead of class?
+A: Simple project. Functions are more straightforward and have less boilerplate than classes.
+
+### Q: Why no services/ folder? Why inside attendance/?
+A: DDD pattern. Group repository + service together by domain.
+
+## Important Notes
+
+### ❌ DON'T
+- Use old-style syntax like `typing.Optional`, `typing.Set`
+- Write docstrings in English
+- Write logs in Korean
+- Make multiple changes without committing
+- Edit files without reading them first
+
+### ✅ DO
+- Always read files before editing
+- Commit immediately after completing work
+- Check syntax before committing
+- Write clear commit messages
+- Think in terms of domains
+
+## Updates
+
+This document should be updated as the project evolves.
+Please update this document whenever there are significant changes to conventions or architecture.
