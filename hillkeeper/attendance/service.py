@@ -6,7 +6,7 @@ from ..messages import MESSAGE_MORNING_CHECK, MESSAGE_EVENING_REMINDER, MESSAGE_
 from ..utils import get_users_who_reacted
 from . import repository
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 async def send_morning_check(bot, channel_id: str, role_id: str):

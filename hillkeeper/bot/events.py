@@ -1,7 +1,7 @@
 """이벤트 핸들러 모듈"""
 import logging
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 def register_events(bot, attendance_messages: dict):

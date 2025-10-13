@@ -6,7 +6,7 @@ from discord.ext import tasks
 from ..config import KST, THURSDAY, get_env
 from ..attendance.service import send_morning_check, send_evening_reminder
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 def _create_morning_check_task(bot):

@@ -4,7 +4,7 @@ import redis.asyncio as redis
 
 from ..config import get_env
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 class RedisClient:

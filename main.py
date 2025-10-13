@@ -16,7 +16,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[logging.StreamHandler()]
 )
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 class HillkeeperBot(discord.Client):

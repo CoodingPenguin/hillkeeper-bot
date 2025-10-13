@@ -3,7 +3,7 @@ import logging
 
 from ..database.redis import redis_client
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 async def save_message(message_id: int, *, channel_id: int):

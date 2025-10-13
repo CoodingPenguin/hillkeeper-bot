@@ -5,7 +5,7 @@ import discord
 from ..config import get_env
 from ..attendance.service import send_morning_check, send_evening_reminder
 
-logger = logging.getLogger('hillkeeper-bot')
+logger = logging.getLogger('hillkeeper')
 
 
 def register_commands(bot):
