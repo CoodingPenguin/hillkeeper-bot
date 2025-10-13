@@ -32,11 +32,13 @@ class HillkeeperBot(discord.Client):
         await redis_client.connect()
 
         try:
+            # slash command 동기화
             await self.tree.sync()
             logger.info("Slash commands synced successfully")
         except Exception as e:
             logger.error(f"Failed to sync commands: {e}")
 
+        # 태스크 스케쥴링 등록
         register_tasks(self)
 
 

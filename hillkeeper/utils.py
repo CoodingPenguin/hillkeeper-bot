@@ -11,15 +11,17 @@ async def get_users_who_reacted(
 ) -> set[discord.Member]:
     """
     특정 이모지로 반응한 사용자 목록을 반환합니다.
+    메시지의 반응을 순회하며 지정된 이모지에 반응한 멤버들을 수집합니다.
+    봇 제외 및 역할 필터링 옵션을 제공합니다.
 
     Args:
         message: 확인할 메시지
-        emoji: 확인할 이모지
-        exclude_bots: 봇을 제외할지 여부
-        filter_role: 특정 역할을 가진 사용자만 필터링
+        emoji: 확인할 이모지 (예: "✅")
+        exclude_bots: 봇을 제외할지 여부 (기본값: True)
+        filter_role: 특정 역할을 가진 사용자만 필터링 (기본값: None)
 
     Returns:
-        반응한 사용자 집합
+        반응한 사용자 집합 (Member 객체)
     """
     reacted_users = set()
 

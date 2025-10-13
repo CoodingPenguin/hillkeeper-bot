@@ -47,7 +47,10 @@ def register_commands(bot):
 
     @bot.tree.command(name="test_evening_reminder", description="Test evening reminder")
     async def test_evening_reminder(interaction: discord.Interaction):
-        """저녁 리마인더를 테스트합니다."""
+        """
+        저녁 리마인더를 테스트합니다.
+        오늘의 출석 데이터를 기반으로 리마인더 메시지를 전송합니다.
+        """
         await interaction.response.defer(ephemeral=True)
 
         try:

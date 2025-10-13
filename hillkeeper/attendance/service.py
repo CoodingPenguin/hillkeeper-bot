@@ -9,7 +9,16 @@ logger = logging.getLogger('hillkeeper')
 
 
 async def send_morning_check(bot, channel_id: str, role_id: str):
-    """아침 출석 체크 메시지를 전송합니다."""
+    """
+    아침 출석 체크 메시지를 전송합니다.
+    지정된 채널에 출석 체크 메시지를 보내고 ✅/❌ 이모지를 추가합니다.
+    메시지 정보는 Redis에 7일간 보관됩니다.
+
+    Args:
+        bot: Discord 봇 인스턴스
+        channel_id: 메시지를 전송할 채널 ID
+        role_id: 멘션할 역할 ID
+    """
     try:
         channel = bot.get_channel(int(channel_id))
         if not channel:
@@ -37,7 +46,16 @@ async def send_morning_check(bot, channel_id: str, role_id: str):
 
 
 async def send_evening_reminder(bot, channel_id: str, role_id: str):
-    """저녁 리마인더 메시지를 전송합니다."""
+    """
+    저녁 리마인더 메시지를 전송합니다.
+    오늘 출석 체크에 ✅ 반응을 누른 멤버들에게 회고 모임 리마인더를 보냅니다.
+    참여자가 없으면 안내 메시지를 전송합니다.
+
+    Args:
+        bot: Discord 봇 인스턴스
+        channel_id: 메시지를 전송할 채널 ID
+        role_id: 필터링할 역할 ID
+    """
     try:
         channel = bot.get_channel(int(channel_id))
         if not channel:
@@ -79,9 +97,6 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         else:
             await channel.send(MESSAGE_NO_PARTICIPANTS)
             logger.info("No members checked in")
-
-        # 오늘 이벤트는 유지 (7일 보관)
-        # clear_today_events() 호출 안 함
 
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")

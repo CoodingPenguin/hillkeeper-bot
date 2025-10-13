@@ -10,10 +10,13 @@ logger = logging.getLogger('hillkeeper')
 
 
 def _create_morning_check_task(bot):
-    """아침 출석 체크 작업을 생성합니다."""
+
     @tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=KST))
     async def morning_check():
-        """매일 오전 9시에 실행되는 작업입니다."""
+        """
+        매일 오전 9시에 실행되는 작업입니다.
+        목요일에만 출석 체크 메시지를 전송합니다.
+        """
         now = datetime.datetime.now(KST)
         if now.weekday() != THURSDAY:
             logger.info("Today is not Thursday, skipping morning check")
@@ -34,10 +37,13 @@ def _create_morning_check_task(bot):
 
 
 def _create_evening_reminder_task(bot):
-    """저녁 리마인더 작업을 생성합니다."""
+
     @tasks.loop(time=datetime.time(hour=21, minute=45, tzinfo=KST))
     async def evening_reminder():
-        """매일 오후 9시 45분에 실행되는 작업입니다."""
+        """
+        매일 오후 9시 45분에 실행되는 작업입니다.
+        목요일에만 회고 모임 리마인더를 전송합니다.
+        """
         now = datetime.datetime.now(KST)
         if now.weekday() != THURSDAY:
             logger.info("Today is not Thursday, skipping evening reminder")

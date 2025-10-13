@@ -19,7 +19,20 @@ EMOJI_MIC = "🎤"
 
 
 def get_env(key: str, *, default: str = None, required: bool = False) -> str:
-    """환경 변수를 가져옵니다."""
+    """
+    환경 변수를 가져옵니다.
+
+    Args:
+        key: 환경 변수 키
+        default: 기본값 (없을 경우 None)
+        required: 필수 여부. True이면 값이 없을 때 예외 발생
+
+    Returns:
+        환경 변수 값
+
+    Raises:
+        ValueError: required=True인데 값이 없을 경우
+    """
     value = os.getenv(key, default)
     if required and not value:
         raise ValueError(f"{key} environment variable is required")

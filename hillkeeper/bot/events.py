@@ -18,7 +18,11 @@ def register_events(bot):
 
     @bot.event
     async def on_raw_reaction_add(payload):
-        """이모지 반응이 추가될 때 실행됩니다."""
+        """
+        이모지 반응이 추가될 때 실행됩니다.
+        출석 체크 메시지에 대한 ✅/❌ 반응을 Redis에 저장합니다.
+        봇 자신의 반응과 다른 이모지는 무시합니다.
+        """
         if payload.user_id == bot.user.id:
             return
 
