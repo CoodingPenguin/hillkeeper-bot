@@ -3,7 +3,7 @@ import logging
 import discord
 
 from ..config import get_env
-from ..services.attendance import send_morning_check, send_evening_reminder
+from ..attendance.service import send_morning_check, send_evening_reminder
 
 logger = logging.getLogger('hillkeeper-bot')
 

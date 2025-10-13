@@ -7,7 +7,7 @@ from hillkeeper.config import get_env
 from hillkeeper.bot.commands import register_commands
 from hillkeeper.bot.events import register_events
 from hillkeeper.bot.tasks import register_tasks
-from hillkeeper.services.attendance import attendance_messages
+from hillkeeper.database.redis import redis_client
 
 # 로깅 설정
 logging.basicConfig(
@@ -29,6 +29,9 @@ class HillkeeperBot(discord.Client):
 
     async def setup_hook(self):
         """봇 시작 시 초기화 작업을 수행합니다."""
+        # Redis 연결
+        await redis_client.connect()
+
         try:
             await self.tree.sync()
             logger.info("Slash commands synced successfully")
@@ -39,12 +42,11 @@ class HillkeeperBot(discord.Client):
 
 
 def main():
-    """봇을 실행합니다."""
     # 봇 인스턴스 생성
     bot = HillkeeperBot()
 
-    # 이벤트 핸들러 등록
-    register_events(bot, attendance_messages)
+    # 이벤트 핸들러 등록 (Redis 기반으로 변경되어 attendance_messages는 불필요)
+    register_events(bot, {})
 
     # 명령어 등록
     register_commands(bot)
