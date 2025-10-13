@@ -1,0 +1,67 @@
+"""작업 스케줄링 모듈"""
+import datetime
+import logging
+from discord.ext import tasks
+
+from .config import KST, THURSDAY, get_env
+from .services import send_morning_check, send_evening_reminder
+
+logger = logging.getLogger('hillkeeper-bot')
+
+
+def _create_morning_check_task(bot):
+    """아침 출석 체크 작업을 생성합니다."""
+    @tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=KST))
+    async def morning_check():
+        """매일 오전 9시에 실행되는 작업입니다."""
+        now = datetime.datetime.now(KST)
+        if now.weekday() != THURSDAY:
+            logger.info("Today is not Thursday, skipping morning check")
+            return
+
+        logger.info("Starting Thursday morning attendance check")
+
+        channel_id = get_env('ATTENDANCE_CHANNEL_ID')
+        role_id = get_env('RETROSPECTIVE_ROLE_ID')
+
+        if not channel_id or not role_id:
+            logger.error("ATTENDANCE_CHANNEL_ID or RETROSPECTIVE_ROLE_ID not set")
+            return
+
+        await send_morning_check(bot, channel_id, role_id)
+
+    return morning_check
+
+
+def _create_evening_reminder_task(bot):
+    """저녁 리마인더 작업을 생성합니다."""
+    @tasks.loop(time=datetime.time(hour=21, minute=45, tzinfo=KST))
+    async def evening_reminder():
+        """매일 오후 9시 45분에 실행되는 작업입니다."""
+        now = datetime.datetime.now(KST)
+        if now.weekday() != THURSDAY:
+            logger.info("Today is not Thursday, skipping evening reminder")
+            return
+
+        logger.info("Starting Thursday evening reminder")
+
+        channel_id = get_env('ATTENDANCE_CHANNEL_ID')
+        role_id = get_env('RETROSPECTIVE_ROLE_ID')
+
+        if not channel_id or not role_id:
+            logger.error("ATTENDANCE_CHANNEL_ID or RETROSPECTIVE_ROLE_ID not set")
+            return
+
+        await send_evening_reminder(bot, channel_id, role_id)
+
+    return evening_reminder
+
+
+def register_tasks(bot):
+    """봇에 스케줄 작업을 등록합니다."""
+    bot.morning_check = _create_morning_check_task(bot)
+    bot.evening_reminder = _create_evening_reminder_task(bot)
+
+    bot.morning_check.start()
+    bot.evening_reminder.start()
+    logger.info("Tasks started successfully")
