@@ -22,12 +22,19 @@ def register_events(bot):
         이모지 반응이 추가될 때 실행됩니다.
         출석 체크 메시지에 대한 ✅/❌ 반응을 Redis에 저장합니다.
         봇 자신의 반응과 다른 이모지는 무시합니다.
+        하나만 선택 가능하도록 반대쪽 이모지는 자동으로 제거합니다.
         """
         if payload.user_id == bot.user.id:
             return
 
         # ✅ 또는 ❌ 반응만 처리
         if str(payload.emoji) not in [EMOJI_CHECK, EMOJI_CROSS]:
+            return
+
+        # 출석 체크 메시지인지 확인 (Redis에 저장된 이벤트인지 체크)
+        event = await repository.get_event(payload.message_id)
+        if not event:
+            # 출석 체크 메시지가 아니면 무시
             return
 
         # 사용자 정보 가져오기
@@ -38,6 +45,22 @@ def register_events(bot):
         member = guild.get_member(payload.user_id)
         if not member:
             return
+
+        # 메시지 가져오기
+        try:
+            channel = bot.get_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
+        except Exception as e:
+            logger.error(f"Failed to fetch message {payload.message_id}: {e}")
+            return
+
+        # 반대쪽 이모지 제거 (하나만 선택 가능)
+        opposite_emoji = EMOJI_CROSS if str(payload.emoji) == EMOJI_CHECK else EMOJI_CHECK
+        try:
+            await message.remove_reaction(opposite_emoji, member)
+        except Exception as e:
+            # 반대쪽 이모지가 없거나 권한 문제 등으로 제거 실패 시 무시
+            logger.debug(f"Failed to remove opposite reaction: {e}")
 
         # Redis에 응답 저장
         response = "yes" if str(payload.emoji) == EMOJI_CHECK else "no"
