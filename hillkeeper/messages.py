@@ -17,9 +17,9 @@ def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str
     content = f"<@&{role_id}>"
 
     embed = discord.Embed(
-        title="회고 모임 참여 체크",
+        title="✉️ 회고 모임 참여 체크",
         description=(
-            "오늘 저녁 10시 회고 모임이 있어요!\n"
+            "오늘 밤 10시 회고 모임이 있어요!\n"
             "참여 여부를 체크해주세요.\n"
             f"- {EMOJI_CHECK} `참여합니다`\n"
             f"- {EMOJI_CROSS} `불참합니다`"
@@ -64,7 +64,7 @@ def create_no_participants_embed() -> discord.Embed:
     """
     embed = discord.Embed(
         title="🐮 언덕지기가 혼자 언덕을 지키고 있어요!",
-        description="오늘은 언덕을 잘 지켜둘게요. 다음 주에 만나요!",
+        description="오늘은 언덕을 잘 지켜둘게요.\n다음 주에 만나요!",
         color=0x34A5DB  # 진한 파란색
     )
 
