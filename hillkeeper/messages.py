@@ -17,18 +17,20 @@ def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str
     content = f"<@&{role_id}>"
 
     embed = discord.Embed(
-        title="✉️ 회고 모임 참여 체크",
+        title="📋️회고 모임 참석 여부 확인",
         description=(
             "오늘 밤 10시 회고 모임이 있어요!\n"
             "참여 여부를 체크해주세요.\n"
-            f"- {EMOJI_CHECK} `참여합니다`\n"
+            f"- {EMOJI_CHECK} `참석합니다`\n"
             f"- {EMOJI_CROSS} `불참합니다`"
         ),
-        color=0x58ABFF  # 파란색
+        color=0x58ABFF,  # 파란색
     )
 
     embed.add_field(name="시간", value="오늘 오후 10시", inline=True)
     embed.add_field(name="채널", value=f"<#{voice_channel_id}>", inline=True)
+
+    embed.set_footer(text="⚠️ 참석과 불참을 모두 누르면 마지막 선택만 남아요.")
 
     return content, embed
 
