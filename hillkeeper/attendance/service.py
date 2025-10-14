@@ -75,23 +75,27 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         # Redis에서 오늘 메시지 ID 가져오기
         message_ids = await repository.get_today_messages()
 
-        # 참여한 멤버 수집
-        participated_members = set()
-        for message_id in message_ids:
-            try:
-                message = await channel.fetch_message(message_id)
-                users = await get_users_who_reacted(
-                    message,
-                    EMOJI_CHECK,
-                    exclude_bots=True,
-                    filter_role=role
-                )
-                participated_members.update(users)
+        if not message_ids:
+            raise ValueError("No attendance messages found for today")
 
-            except Exception as e:
-                logger.error(f"Failed to fetch message {message_id}: {e}")
-                # 실패한 메시지는 Redis에서 삭제
-                await repository.delete_event(message_id)
+        # 최신 메시지만 사용
+        latest_message_id = max(message_ids)
+        logger.info(f"Using latest attendance message: {latest_message_id}")
+
+        # 최신 메시지에서 참여한 멤버 수집
+        try:
+            message = await channel.fetch_message(latest_message_id)
+            participated_members = await get_users_who_reacted(
+                message,
+                EMOJI_CHECK,
+                exclude_bots=True,
+                filter_role=role
+            )
+        except Exception as e:
+            logger.error(f"Failed to fetch message {latest_message_id}: {e}")
+            # 실패한 메시지는 Redis에서 삭제
+            await repository.delete_event(latest_message_id)
+            raise ValueError(f"Failed to fetch attendance message: {latest_message_id}") from e
 
         # 리마인더 메시지 전송
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
