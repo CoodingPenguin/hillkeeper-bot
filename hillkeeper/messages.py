@@ -20,7 +20,7 @@ def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str
         title="📋️회고 모임 참석 여부 확인",
         description=(
             "오늘 밤 10시 회고 모임이 있어요!\n"
-            "참여 여부를 체크해주세요.\n"
+            "참석 여부를 체크해주세요.\n"
             f"- {EMOJI_CHECK} `참석합니다`\n"
             f"- {EMOJI_CROSS} `불참합니다`"
         ),
