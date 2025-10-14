@@ -1,0 +1,16 @@
+name: Keep Render Service Alive
+
+on:
+  schedule:
+    # 매 10분마다 실행 (Render는 15분 후 sleep)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health check endpoint
+        run: |
+          curl -f ${{ secrets.RENDER_SERVICE_URL }}/health || exit 0
+          echo "Health check successful"
