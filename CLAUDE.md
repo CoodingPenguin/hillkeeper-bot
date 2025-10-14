@@ -180,7 +180,7 @@ VOICE_CHANNEL_ID=voice_channel_id
 # Redis (Render Key-Value Store)
 REDIS_URL=redis://default:password@host:port
 
-# Required - for testing
+# for test
 TEST_CHANNEL_ID=test_channel_id
 TEST_ROLE_ID=test_role_id
 ```

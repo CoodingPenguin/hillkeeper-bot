@@ -42,7 +42,7 @@ VOICE_CHANNEL_ID=your_voice_channel_id
 # Redis (Render Key-Value Store)
 REDIS_URL=redis://default:password@host:port
 
-# 필수 (테스트용)
+# 테스트
 TEST_CHANNEL_ID=test_channel_id
 TEST_ROLE_ID=test_role_id
 ```
