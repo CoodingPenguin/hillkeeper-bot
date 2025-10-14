@@ -11,7 +11,7 @@ logger = logging.getLogger('hillkeeper')
 def register_commands(bot):
     """봇에 slash commands를 등록합니다."""
 
-    @bot.tree.command(name="ping", description="Check bot's response time")
+    @bot.tree.command(name="ping", description="봇의 응답시간을 체크합니다.")
     async def ping(interaction: discord.Interaction):
         """봇의 응답 속도를 확인합니다."""
         latency = round(bot.latency * 1000)
@@ -86,7 +86,7 @@ def register_commands(bot):
         try:
             await clear_today_attendance()
             await interaction.followup.send(
-                "✅ 오늘의 출석 데이터를 초기화했습니다.",
+                "✅ Today's attendance data has been cleared.",
                 ephemeral=True
             )
             logger.info(f"{interaction.user} cleared today's attendance data")
