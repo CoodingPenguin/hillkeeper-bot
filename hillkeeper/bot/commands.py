@@ -3,7 +3,7 @@ import logging
 import discord
 
 from ..config import get_env
-from ..attendance.service import send_morning_check, send_evening_reminder, clear_today_attendance
+from ..attendance.service import send_morning_check, send_evening_reminder
 
 logger = logging.getLogger('hillkeeper')
 
@@ -18,7 +18,7 @@ def register_commands(bot):
         logger.info(f'{interaction.user} used ping command. Latency: {latency}ms')
         await interaction.response.send_message(f'🏓 Pong! Latency: {latency}ms')
 
-    @bot.tree.command(name="test_morning_check", description="Test morning attendance check")
+    @bot.tree.command(name="test_morning_check", description="회고모임 참석 메시지를 테스트합니다. 1분 후 자동 삭제됩니다.")
     async def test_morning_check(interaction: discord.Interaction):
         """아침 출석 체크를 테스트합니다."""
         await interaction.response.defer(ephemeral=True)
@@ -34,9 +34,9 @@ def register_commands(bot):
                 )
                 return
 
-            await send_morning_check(bot, channel_id, role_id)
+            await send_morning_check(bot, channel_id, role_id, is_test=True)
             await interaction.followup.send(
-                "✅ Morning check test completed! Check the test channel.",
+                "✅ Morning check test completed! Check the test channel. (Auto-delete in 1 minute)",
                 ephemeral=True
             )
             logger.info(f"{interaction.user} triggered test morning check")
@@ -45,7 +45,7 @@ def register_commands(bot):
             await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
             logger.error(f"Test morning check failed: {e}")
 
-    @bot.tree.command(name="test_evening_reminder", description="Test evening reminder")
+    @bot.tree.command(name="test_evening_reminder", description="회고모임 리마인드 메시지를 테스트합니다.")
     async def test_evening_reminder(interaction: discord.Interaction):
         """
         저녁 리마인더를 테스트합니다.
@@ -74,23 +74,3 @@ def register_commands(bot):
         except Exception as e:
             await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
             logger.error(f"Test evening reminder failed: {e}")
-
-    @bot.tree.command(name="clear_today_attendance", description="Clear today's attendance data (for testing)")
-    async def clear_today_attendance_command(interaction: discord.Interaction):
-        """
-        오늘의 출석 데이터를 초기화합니다.
-        테스트 목적으로 사용됩니다.
-        """
-        await interaction.response.defer(ephemeral=True)
-
-        try:
-            await clear_today_attendance()
-            await interaction.followup.send(
-                "✅ Today's attendance data has been cleared.",
-                ephemeral=True
-            )
-            logger.info(f"{interaction.user} cleared today's attendance data")
-
-        except Exception as e:
-            await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
-            logger.error(f"Clear today attendance failed: {e}")

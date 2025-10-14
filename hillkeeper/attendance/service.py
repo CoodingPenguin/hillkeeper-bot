@@ -8,16 +8,17 @@ from . import repository
 logger = logging.getLogger('hillkeeper')
 
 
-async def send_morning_check(bot, channel_id: str, role_id: str):
+async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: bool = False):
     """
     아침 출석 체크 메시지를 전송합니다.
     지정된 채널에 출석 체크 메시지를 보내고 ✅/❌ 이모지를 추가합니다.
-    메시지 정보는 Redis에 7일간 보관됩니다.
+    테스트 모드에서는 1분 TTL, 프로덕션에서는 7일 TTL로 Redis에 저장됩니다.
 
     Args:
         bot: Discord 봇 인스턴스
         channel_id: 메시지를 전송할 채널 ID
         role_id: 멘션할 역할 ID
+        is_test: 테스트 모드 여부 (기본값: False)
     """
     try:
         channel = bot.get_channel(int(channel_id))
@@ -32,14 +33,16 @@ async def send_morning_check(bot, channel_id: str, role_id: str):
         await message.add_reaction(EMOJI_CHECK)
         await message.add_reaction(EMOJI_CROSS)
 
-        # Redis에 이벤트 저장 (7일 보관)
+        # Redis에 이벤트 저장 (테스트: 1분, 프로덕션: 7일)
+        ttl = 60 if is_test else repository.TTL_7_DAYS
         await repository.save_event(
             message.id,
             channel_id=channel.id,
-            role_id=int(role_id)
+            role_id=int(role_id),
+            ttl=ttl
         )
 
-        logger.info(f"Morning check message sent: {message.id}")
+        logger.info(f"Morning check message sent: {message.id} (test={is_test}, ttl={ttl}s)")
 
     except Exception as e:
         logger.error(f"Failed to send morning check message: {e}")
@@ -108,10 +111,3 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         raise
 
 
-async def clear_today_attendance():
-    """
-    오늘의 출석 데이터를 초기화합니다.
-    테스트 목적으로 사용됩니다.
-    """
-    await repository.clear_today_events()
-    logger.info("Cleared today's attendance data")

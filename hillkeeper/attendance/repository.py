@@ -9,15 +9,16 @@ logger = logging.getLogger('hillkeeper')
 TTL_7_DAYS = 604800  # 7 days
 
 
-async def save_event(message_id: int, *, channel_id: int, role_id: int):
+async def save_event(message_id: int, *, channel_id: int, role_id: int, ttl: int = TTL_7_DAYS):
     """
     출석 체크 이벤트를 저장합니다.
-    메시지 정보와 함께 출석 이벤트를 Redis에 저장하고 7일 TTL을 설정합니다.
+    메시지 정보와 함께 출석 이벤트를 Redis에 저장하고 TTL을 설정합니다.
 
     Args:
         message_id: 디스코드 메시지 ID
         channel_id: 채널 ID
         role_id: 멘션할 역할 ID
+        ttl: 만료 시간(초) (기본값: 7일)
     """
     now = datetime.now(KST)
     date = now.date()
@@ -32,9 +33,8 @@ async def save_event(message_id: int, *, channel_id: int, role_id: int):
             "created_at": now.isoformat()
         }
     )
-    # 7일 후 자동 삭제
-    await redis_client.client.expire(key, TTL_7_DAYS)
-    logger.info(f"Stored attendance event: {date}:{message_id}")
+    await redis_client.client.expire(key, ttl)
+    logger.info(f"Stored attendance event: {date}:{message_id} (ttl={ttl}s)")
 
 
 async def save_response(message_id: int, user_id: int, *, username: str, response: str):
@@ -144,17 +144,3 @@ async def delete_event(message_id: int, date: datetime.date = None):
     logger.info(f"Deleted attendance event: {date}:{message_id}")
 
 
-async def clear_today_events():
-    """
-    오늘의 모든 이벤트를 삭제합니다.
-    주로 테스트나 수동 정리용으로 사용됩니다.
-    """
-    date = datetime.now(KST).date()
-    pattern = f"attendance:event:{date}:*"
-
-    deleted = 0
-    async for key in redis_client.client.scan_iter(match=pattern):
-        await redis_client.client.delete(key)
-        deleted += 1
-
-    logger.info(f"Cleared {deleted} attendance events for {date}")
