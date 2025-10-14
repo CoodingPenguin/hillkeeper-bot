@@ -106,3 +106,12 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")
         raise
+
+
+async def clear_today_attendance():
+    """
+    오늘의 출석 데이터를 초기화합니다.
+    테스트 목적으로 사용됩니다.
+    """
+    await repository.clear_today_events()
+    logger.info("Cleared today's attendance data")

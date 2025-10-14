@@ -3,7 +3,7 @@ import logging
 import discord
 
 from ..config import get_env
-from ..attendance.service import send_morning_check, send_evening_reminder
+from ..attendance.service import send_morning_check, send_evening_reminder, clear_today_attendance
 
 logger = logging.getLogger('hillkeeper')
 
@@ -74,3 +74,23 @@ def register_commands(bot):
         except Exception as e:
             await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
             logger.error(f"Test evening reminder failed: {e}")
+
+    @bot.tree.command(name="clear_today_attendance", description="Clear today's attendance data (for testing)")
+    async def clear_today_attendance_command(interaction: discord.Interaction):
+        """
+        오늘의 출석 데이터를 초기화합니다.
+        테스트 목적으로 사용됩니다.
+        """
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            await clear_today_attendance()
+            await interaction.followup.send(
+                "✅ 오늘의 출석 데이터를 초기화했습니다.",
+                ephemeral=True
+            )
+            logger.info(f"{interaction.user} cleared today's attendance data")
+
+        except Exception as e:
+            await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
+            logger.error(f"Clear today attendance failed: {e}")
