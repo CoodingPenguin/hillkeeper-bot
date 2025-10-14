@@ -18,10 +18,14 @@ def register_events(bot):
 
     @bot.event
     async def on_raw_reaction_add(payload):
+        """이모지 반응이 추가될 때 실행됩니다."""
+        await on_attendance_reaction(payload)
+        # 필요시 다른 reaction handler 추가 가능
+        # await on_another_reaction(payload)
+
+    async def on_attendance_reaction(payload):
         """
-        이모지 반응이 추가될 때 실행됩니다.
-        출석 체크 메시지에 대한 ✅/❌ 반응을 Redis에 저장합니다.
-        봇 자신의 반응과 다른 이모지는 무시합니다.
+        출석 체크 메시지에 대한 이모지 반응을 처리합니다.
         하나만 선택 가능하도록 반대쪽 이모지는 자동으로 제거합니다.
         """
         if payload.user_id == bot.user.id:
@@ -72,3 +76,4 @@ def register_events(bot):
         )
 
         logger.info(f"User {member.display_name} ({payload.user_id}) reacted with {payload.emoji}")
+
