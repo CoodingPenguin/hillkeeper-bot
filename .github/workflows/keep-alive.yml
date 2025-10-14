@@ -2,9 +2,9 @@ name: Keep Render Service Alive
 
 on:
   schedule:
-    # 매 10분마다 실행 (3, 13, 23, 33, 43, 53분)
+    # 매 5분마다 실행 (3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58분)
     # 정시를 피해 GitHub Actions 큐 부하를 회피
-    - cron: '3,13,23,33,43,53 * * * *'
+    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
