@@ -180,8 +180,9 @@ VOICE_CHANNEL_ID=voice_channel_id
 # Redis (Render Key-Value Store)
 REDIS_URL=redis://default:password@host:port
 
-# Optional - for testing
+# Required - for testing
 TEST_CHANNEL_ID=test_channel_id
+TEST_ROLE_ID=test_role_id
 ```
 
 ### Redis Configuration

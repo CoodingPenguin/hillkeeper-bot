@@ -24,15 +24,8 @@ def register_commands(bot):
         await interaction.response.defer(ephemeral=True)
 
         try:
-            channel_id = get_env('TEST_CHANNEL_ID') or get_env('ATTENDANCE_CHANNEL_ID')
-            role_id = get_env('RETROSPECTIVE_ROLE_ID')
-
-            if not channel_id or not role_id:
-                await interaction.followup.send(
-                    "❌ Required environment variables not set",
-                    ephemeral=True
-                )
-                return
+            channel_id = get_env('TEST_CHANNEL_ID', required=True)
+            role_id = get_env('TEST_ROLE_ID', required=True)
 
             await send_morning_check(bot, channel_id, role_id, is_test=True)
             await interaction.followup.send(
@@ -54,15 +47,8 @@ def register_commands(bot):
         await interaction.response.defer(ephemeral=True)
 
         try:
-            channel_id = get_env('TEST_CHANNEL_ID') or get_env('ATTENDANCE_CHANNEL_ID')
-            role_id = get_env('RETROSPECTIVE_ROLE_ID')
-
-            if not channel_id or not role_id:
-                await interaction.followup.send(
-                    "❌ Required environment variables not set",
-                    ephemeral=True
-                )
-                return
+            channel_id = get_env('TEST_CHANNEL_ID', required=True)
+            role_id = get_env('TEST_ROLE_ID', required=True)
 
             await send_evening_reminder(bot, channel_id, role_id)
             await interaction.followup.send(
