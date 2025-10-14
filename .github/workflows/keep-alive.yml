@@ -12,5 +12,5 @@ jobs:
     steps:
       - name: Ping health check endpoint
         run: |
-          curl -f ${{ secrets.RENDER_SERVICE_URL }}/health || exit 0
+          curl -f ${{ secrets.RENDER_SERVICE_URL }} || exit 0
           echo "Health check successful"
