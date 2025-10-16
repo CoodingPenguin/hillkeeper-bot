@@ -100,7 +100,7 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         # 리마인더 메시지 전송
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
 
-        if participated_members:
+        if participated_members and len(participated_members) > 1:
             mentions = " ".join([member.mention for member in participated_members])
             content, embed = create_evening_reminder_embed(mentions, int(voice_channel_id))
             await channel.send(content=content, embed=embed)
@@ -108,7 +108,7 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         else:
             embed = create_no_participants_embed()
             await channel.send(embed=embed)
-            logger.info("No members checked in")
+            logger.info(f"Not enough participants: {len(participated_members) if participated_members else 0} members")
 
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")
