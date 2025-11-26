@@ -1,4 +1,8 @@
-# Claude Code Working Guidelines
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
 
 This document defines the rules and context that Claude Code should follow when working on the hillkeeper-bot project.
 
@@ -16,6 +20,32 @@ This document defines the rules and context that Claude Code should follow when 
 - Redis (Render Key-Value Store)
 - Poetry (dependency management)
 - Deployment: Render
+
+## Development Commands
+
+### Running the Bot
+```bash
+# Install dependencies
+poetry install
+
+# Run the bot locally
+poetry run python main.py
+```
+
+### Manual Testing Scripts
+```bash
+# Send morning check notification manually
+poetry run python scripts/send_notification.py morning
+
+# Send evening reminder notification manually
+poetry run python scripts/send_notification.py evening
+```
+
+### Syntax Validation
+```bash
+# Check Python syntax for a specific file
+python -m py_compile <file_path>
+```
 
 ## Project Structure
 
@@ -189,6 +219,11 @@ TEST_ROLE_ID=test_role_id
 - **Local development**: External URL + Allow all IPs (`0.0.0.0/0`)
 - **Render deployment**: Internal URL (no IP restriction needed)
 
+### Slash Commands Available
+- `/ping` - Check bot latency
+- `/test_morning_check` - Test morning attendance check message (uses TEST_CHANNEL_ID)
+- `/test_evening_reminder` - Test evening reminder message (uses TEST_CHANNEL_ID)
+
 ## Work Checklist
 
 ### Before Modifying Files
@@ -206,6 +241,21 @@ TEST_ROLE_ID=test_role_id
 1. ✅ Check syntax: `python -m py_compile`
 2. ✅ **Commit immediately** 🔴
 3. ✅ Write clear commit message describing changes
+
+## Discord Bot Architecture
+
+### Bot Initialization
+The bot uses a custom `HillkeeperBot` class that extends `discord.Client`:
+- **Intents**: Requires `members` intent for user information
+- **Command Tree**: Uses `app_commands.CommandTree` for slash commands
+- **Setup Hook**: Handles Redis connection and command syncing on startup
+
+### Health Check Server
+The bot runs an aiohttp web server alongside the Discord bot:
+- **Purpose**: Render deployment requires port binding
+- **Port**: Uses `PORT` environment variable (default: 8080)
+- **Endpoints**: `/` and `/health` both return 'OK'
+- **Implementation**: Runs in parallel with the bot using asyncio
 
 ## Discord.py Patterns
 
