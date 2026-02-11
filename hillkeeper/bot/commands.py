@@ -11,6 +11,21 @@ logger = logging.getLogger('hillkeeper')
 def register_commands(bot):
     """봇에 slash commands를 등록합니다."""
 
+    @bot.tree.command(name="sync", description="슬래시 커맨드를 Discord에 동기화합니다.")
+    async def sync(interaction: discord.Interaction):
+        """슬래시 커맨드를 수동으로 동기화합니다."""
+        await interaction.response.defer(ephemeral=True)
+        try:
+            synced = await bot.tree.sync()
+            await interaction.followup.send(
+                f"✅ Synced {len(synced)} command(s)",
+                ephemeral=True
+            )
+            logger.info(f"Slash commands synced manually by {interaction.user}: {len(synced)} commands")
+        except Exception as e:
+            await interaction.followup.send(f"❌ Sync failed: {e}", ephemeral=True)
+            logger.error(f"Manual command sync failed: {e}")
+
     @bot.tree.command(name="ping", description="봇의 응답시간을 체크합니다.")
     async def ping(interaction: discord.Interaction):
         """봇의 응답 속도를 확인합니다."""
