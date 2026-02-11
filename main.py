@@ -84,14 +84,31 @@ async def main_async():
     # 웹 서버 시작 (Render 포트 바인딩용)
     runner = await start_web_server()
 
-    # 봇 실행
+    # 봇 실행 (429 rate limit 시 재시도)
     token = get_env('DISCORD_TOKEN', required=True)
-    logger.info('Starting bot...')
+    max_retries = 5
     try:
-        await bot.start(token)
+        for attempt in range(1, max_retries + 1):
+            logger.info(f'Starting bot... (attempt {attempt}/{max_retries})')
+            try:
+                await bot.start(token)
+                break
+            except discord.HTTPException as e:
+                if e.status == 429 and attempt < max_retries:
+                    wait = min(30 * attempt, 120)
+                    logger.warning(f"Rate limited (429), retrying in {wait}s... (attempt {attempt}/{max_retries})")
+                    await bot.close()
+                    await asyncio.sleep(wait)
+                    # 새 봇 인스턴스 생성 (이전 HTTP 세션 정리)
+                    bot = HillkeeperBot()
+                    register_events(bot)
+                    register_commands(bot)
+                else:
+                    raise
     finally:
-        logger.info('Shutting down bot...')
-        await bot.close()
+        logger.info('Shutting down...')
+        if not bot.is_closed():
+            await bot.close()
         await redis_client.disconnect()
         if runner:
             await runner.cleanup()
