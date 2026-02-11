@@ -84,19 +84,20 @@ async def main_async():
     # 웹 서버 시작 (Render 포트 바인딩용)
     runner = await start_web_server()
 
-    # 봇 실행 (429 rate limit 시 재시도)
+    # 봇 실행 (429 rate limit 시 무한 재시도)
     token = get_env('DISCORD_TOKEN', required=True)
-    max_retries = 5
+    attempt = 0
     try:
-        for attempt in range(1, max_retries + 1):
-            logger.info(f'Starting bot... (attempt {attempt}/{max_retries})')
+        while True:
+            attempt += 1
+            logger.info(f'Starting bot... (attempt {attempt})')
             try:
                 await bot.start(token)
                 break
             except discord.HTTPException as e:
-                if e.status == 429 and attempt < max_retries:
-                    wait = min(30 * attempt, 120)
-                    logger.warning(f"Rate limited (429), retrying in {wait}s... (attempt {attempt}/{max_retries})")
+                if e.status == 429:
+                    wait = min(60 * attempt, 300)
+                    logger.warning(f"Rate limited (429), retrying in {wait}s... (attempt {attempt})")
                     await bot.close()
                     await asyncio.sleep(wait)
                     # 새 봇 인스턴스 생성 (이전 HTTP 세션 정리)
