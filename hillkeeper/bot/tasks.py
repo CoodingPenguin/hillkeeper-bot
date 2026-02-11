@@ -33,6 +33,10 @@ def _create_morning_check_task(bot):
 
         await send_morning_check(bot, channel_id, role_id)
 
+    @morning_check.error
+    async def morning_check_error(error):
+        logger.error(f"Morning check task failed: {error}")
+
     return morning_check
 
 
@@ -59,6 +63,10 @@ def _create_evening_reminder_task(bot):
             return
 
         await send_evening_reminder(bot, channel_id, role_id)
+
+    @evening_reminder.error
+    async def evening_reminder_error(error):
+        logger.error(f"Evening reminder task failed: {error}")
 
     return evening_reminder
 
