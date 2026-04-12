@@ -96,8 +96,9 @@ database/redis.py (Infrastructure)
 - `Dict[K, V]` → `dict[K, V]`
 
 ### Code Style
-- **Docstrings**: Korean, ending with `~다.` (see Docstring Format below)
+- **Docstrings**: English (Google Style, see Docstring Format below)
 - **Log messages**: English
+- **Comments**: English
 - **Logger name**: `'hillkeeper'` (unified)
 - **Function parameters**: Use keyword-only args with `*` for important parameters
 - **Comments**: Concise and clear, no separator lines like `====`
@@ -110,27 +111,27 @@ database/redis.py (Infrastructure)
 ```python
 def function_name(param1: int, param2: str) -> bool:
     """
-    함수의 간단한 설명입니다.
-    추가 상세 설명이 필요한 경우 여기에 작성합니다.
+    Brief summary of the function.
+    Additional details if needed.
 
     Args:
-        param1: 첫 번째 파라미터 설명 (타입은 생략)
-        param2: 두 번째 파라미터 설명
+        param1: Description of first parameter (no type).
+        param2: Description of second parameter.
 
     Returns:
-        반환값에 대한 설명
+        Description of the return value.
 
     Raises:
-        ValueError: 예외 발생 조건
+        ValueError: When the condition is met.
     """
 ```
 
 **Key Points:**
-- Opening `"""` 다음 줄바꿈
-- 첫 줄: 간단한 요약 (한 문장)
-- 상세 설명이 필요하면 빈 줄 후 추가 설명
-- Args 섹션에는 **타입을 포함하지 않음** (type hints가 이미 시그니처에 있음)
-- PyCharm/JetBrains IDE에서 Quick Documentation으로 보기 좋게 표시됨
+- Opening `"""` followed by a newline
+- First line: brief summary (one sentence)
+- Additional details after a blank line if needed
+- Args section does **not** include types (already in the signature)
+- Renders well in PyCharm/JetBrains Quick Documentation
 
 **Rationale:**
 - Type hints already in function signature → don't duplicate in Args

@@ -1,6 +1,6 @@
-"""테스트 공통 fixture"""
+"""Shared test fixtures."""
 import datetime
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
 import pytest
@@ -8,17 +8,15 @@ import pytest
 from hillkeeper.config import KST
 
 
-# --- 시간 fixture ---
+# --- Time fixtures ---
 
-THURSDAY_DATETIME = datetime.datetime(2026, 4, 9, 9, 0, 0, tzinfo=KST)  # 목요일
-MONDAY_DATETIME = datetime.datetime(2026, 4, 6, 9, 0, 0, tzinfo=KST)  # 월요일
+THURSDAY_DATETIME = datetime.datetime(2026, 4, 9, 9, 0, 0, tzinfo=KST)
+MONDAY_DATETIME = datetime.datetime(2026, 4, 6, 9, 0, 0, tzinfo=KST)
 
 
 @pytest.fixture
 def thursday_now():
-    """
-    datetime.datetime.now를 목요일로 고정하는 fixture.
-    """
+    """Freeze datetime.now to a known Thursday."""
     with patch("datetime.datetime") as mock_dt:
         mock_dt.now.return_value = THURSDAY_DATETIME
         mock_dt.side_effect = lambda *args, **kwargs: datetime.datetime(*args, **kwargs)
@@ -29,9 +27,7 @@ def thursday_now():
 
 @pytest.fixture
 def fake_redis():
-    """
-    redis_client._client를 AsyncMock으로 교체하는 fixture.
-    """
+    """Replace redis_client._client with an AsyncMock."""
     mock_client = AsyncMock()
     mock_client.hset = AsyncMock()
     mock_client.expire = AsyncMock()
@@ -48,10 +44,10 @@ def fake_redis():
         yield mock_client
 
 
-# --- Discord fixture ---
+# --- Discord fixtures ---
 
 def _make_member(user_id: int, name: str, *, bot: bool = False, roles: list | None = None):
-    """테스트용 Discord Member mock을 생성하는 헬퍼."""
+    """Create a mock Discord Member for testing."""
     member = MagicMock(spec=discord.Member)
     member.id = user_id
     member.display_name = name
@@ -63,7 +59,7 @@ def _make_member(user_id: int, name: str, *, bot: bool = False, roles: list | No
 
 @pytest.fixture
 def mock_bot():
-    """Discord 봇 AsyncMock fixture."""
+    """Provide a Discord bot AsyncMock with pre-configured channel/guild."""
     bot = AsyncMock()
     bot.user = MagicMock()
     bot.user.id = 999
@@ -98,7 +94,7 @@ def mock_bot():
 
 @pytest.fixture
 def env_vars(monkeypatch):
-    """필수 환경변수를 설정하는 fixture."""
+    """Set required environment variables for testing."""
     monkeypatch.setenv("DISCORD_TOKEN", "test-token")
     monkeypatch.setenv("ATTENDANCE_CHANNEL_ID", "100")
     monkeypatch.setenv("RETROSPECTIVE_ROLE_ID", "200")

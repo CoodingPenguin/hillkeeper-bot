@@ -1,4 +1,4 @@
-"""config.py 테스트"""
+"""Tests for config.py."""
 import pytest
 
 from hillkeeper.config import get_env

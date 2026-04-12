@@ -1,4 +1,4 @@
-"""tasks.py 테스트"""
+"""Tests for tasks.py."""
 import datetime
 from unittest.mock import AsyncMock, patch
 

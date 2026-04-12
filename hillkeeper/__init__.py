@@ -1,1 +1,1 @@
-"""언덕지기 봇 패키지"""
+"""Hillkeeper bot package."""

@@ -1,4 +1,4 @@
-"""service.py 테스트"""
+"""Tests for service.py."""
 import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -46,7 +46,7 @@ class TestSendEveningReminder:
 
     @pytest.fixture
     def setup_evening(self, mock_bot, env_vars, fake_redis):
-        """저녁 리마인더 테스트용 공통 setup."""
+        """Common setup for evening reminder tests."""
         async def scan_iter(match=None):
             yield f"attendance:event:{FIXED_THURSDAY.date()}:12345"
 

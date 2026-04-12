@@ -1,23 +1,22 @@
-"""설정 및 상수 관리"""
+"""Configuration and constants."""
 import os
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 
-# 환경 변수 로드
 load_dotenv()
 
-# 타임존 설정
+# Timezone
 KST = ZoneInfo("Asia/Seoul")
 
-# 요일 상수
+# Day of week
 THURSDAY = 3
 
-# 이모지 상수
+# Emoji
 EMOJI_CHECK = "✅"
 EMOJI_CROSS = "❌"
 EMOJI_MIC = "🎤"
 
-# 색상 상수
+# Colors
 COLOR_BLUE = 0x58ABFF
 COLOR_YELLOW = 0xF1C40F
 COLOR_DARK_BLUE = 0x34A5DB
@@ -25,18 +24,18 @@ COLOR_DARK_BLUE = 0x34A5DB
 
 def get_env(key: str, *, default: str = None, required: bool = False) -> str:
     """
-    환경 변수를 가져옵니다.
+    Retrieve an environment variable.
 
     Args:
-        key: 환경 변수 키
-        default: 기본값 (없을 경우 None)
-        required: 필수 여부. True이면 값이 없을 때 예외 발생
+        key: Environment variable name.
+        default: Fallback value if not set.
+        required: If True, raise when the variable is missing.
 
     Returns:
-        환경 변수 값
+        The environment variable value.
 
     Raises:
-        ValueError: required=True인데 값이 없을 경우
+        ValueError: If required is True and the variable is not set.
     """
     value = os.getenv(key, default)
     if required and not value:

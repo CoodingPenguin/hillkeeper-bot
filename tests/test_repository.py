@@ -1,4 +1,4 @@
-"""repository.py 테스트"""
+"""Tests for repository.py."""
 import datetime
 from unittest.mock import AsyncMock, patch
 
@@ -18,7 +18,7 @@ FIXED_DATE = FIXED_THURSDAY.date()
 
 @pytest.fixture(autouse=True)
 def patch_datetime():
-    """datetime.now를 고정된 목요일로 패치."""
+    """Patch datetime.now to a fixed Thursday."""
     with patch("hillkeeper.attendance.repository.datetime") as mock_dt:
         mock_dt.now.return_value = FIXED_THURSDAY
         mock_dt.date = datetime.date

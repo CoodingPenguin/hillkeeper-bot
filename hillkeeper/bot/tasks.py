@@ -1,4 +1,4 @@
-"""task 스케쥴링 설정"""
+"""Scheduled task definitions."""
 import datetime
 import logging
 from discord.ext import tasks
@@ -10,24 +10,23 @@ logger = logging.getLogger('hillkeeper')
 
 
 def _is_thursday() -> bool:
-    """
-    현재 요일이 목요일인지 확인합니다.
-
-    Returns:
-        목요일이면 True, 아니면 False
-    """
+    """Return True if today is Thursday in KST."""
     now = datetime.datetime.now(KST)
     return now.weekday() == THURSDAY
 
 
 async def _run_thursday_task(task_name: str, service_fn, bot):
     """
-    목요일에만 실행되는 작업의 공통 로직을 처리합니다.
+    Shared guard logic for Thursday-only scheduled tasks.
+
+    Skips execution on non-Thursday days and validates that
+    required environment variables are set before calling
+    the service function.
 
     Args:
-        task_name: 작업 이름 (로그용)
-        service_fn: 실행할 서비스 함수
-        bot: Discord 봇 인스턴스
+        task_name: Human-readable name used in log messages.
+        service_fn: Async service function to invoke.
+        bot: The Discord bot instance.
     """
     if not _is_thursday():
         logger.info(f"Today is not Thursday, skipping {task_name}")
@@ -49,7 +48,7 @@ def _create_morning_check_task(bot):
 
     @tasks.loop(time=datetime.time(hour=9, minute=0, tzinfo=KST))
     async def morning_check():
-        """매일 오전 9시에 실행되는 작업입니다."""
+        """Run daily at 09:00 KST."""
         await _run_thursday_task("morning attendance check", send_morning_check, bot)
 
     @morning_check.error
@@ -63,7 +62,7 @@ def _create_evening_reminder_task(bot):
 
     @tasks.loop(time=datetime.time(hour=21, minute=45, tzinfo=KST))
     async def evening_reminder():
-        """매일 오후 9시 45분에 실행되는 작업입니다."""
+        """Run daily at 21:45 KST."""
         await _run_thursday_task("evening reminder", send_evening_reminder, bot)
 
     @evening_reminder.error
@@ -74,7 +73,7 @@ def _create_evening_reminder_task(bot):
 
 
 def register_tasks(bot):
-    """봇에 스케줄 작업을 등록합니다."""
+    """Register and start all scheduled tasks."""
     bot.morning_check = _create_morning_check_task(bot)
     bot.evening_reminder = _create_evening_reminder_task(bot)
 

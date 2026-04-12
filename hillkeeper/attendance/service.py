@@ -1,3 +1,4 @@
+"""Attendance business logic."""
 import logging
 
 import discord
@@ -12,11 +13,11 @@ logger = logging.getLogger('hillkeeper')
 
 def _get_channel(bot, channel_id: str) -> discord.TextChannel | None:
     """
-    채널 객체를 가져옵니다. 없으면 로그를 남기고 None을 반환합니다.
+    Look up a channel by ID, logging an error if not found.
 
     Args:
-        bot: Discord 봇 인스턴스
-        channel_id: 채널 ID 문자열
+        bot: The Discord bot instance.
+        channel_id: Channel ID string.
     """
     channel = bot.get_channel(int(channel_id))
     if not channel:
@@ -28,18 +29,18 @@ async def _get_participated_members(
     channel, message_id: int, role: discord.Role
 ) -> set[discord.Member]:
     """
-    출석 체크 메시지에서 참여한 멤버를 수집합니다.
+    Collect members who reacted with the check emoji.
 
     Args:
-        channel: Discord 채널
-        message_id: 출석 체크 메시지 ID
-        role: 필터링할 역할
+        channel: The Discord channel.
+        message_id: Attendance check message ID.
+        role: Role to filter by.
 
     Returns:
-        참여한 멤버 집합
+        A set of participating members.
 
     Raises:
-        ValueError: 메시지를 가져오지 못한 경우
+        ValueError: If the message could not be fetched.
     """
     try:
         message = await channel.fetch_message(message_id)
@@ -57,12 +58,12 @@ async def _get_participated_members(
 
 async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
     """
-    참여자 수에 따라 리마인더 또는 안내 메시지를 전송합니다.
+    Send either a participant reminder or a "no one showed up" message.
 
     Args:
-        channel: Discord 채널
-        members: 참여한 멤버 집합
-        voice_channel_id: 음성 채널 ID 문자열
+        channel: The Discord channel.
+        members: Set of participating members.
+        voice_channel_id: Voice channel ID string.
     """
     if members and len(members) > 1:
         mentions = " ".join([member.mention for member in members])
@@ -77,15 +78,17 @@ async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
 
 async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: bool = False):
     """
-    아침 출석 체크 메시지를 전송합니다.
-    지정된 채널에 출석 체크 메시지를 보내고 ✅/❌ 이모지를 추가합니다.
-    테스트 모드에서는 1분 TTL, 프로덕션에서는 7일 TTL로 Redis에 저장됩니다.
+    Send the morning attendance check message.
+
+    Posts an embed with check/cross reactions and persists the
+    event to Redis. Uses a 1-minute TTL in test mode, 7-day TTL
+    in production.
 
     Args:
-        bot: Discord 봇 인스턴스
-        channel_id: 메시지를 전송할 채널 ID
-        role_id: 멘션할 역할 ID
-        is_test: 테스트 모드 여부 (기본값: False)
+        bot: The Discord bot instance.
+        channel_id: Target channel ID.
+        role_id: Role ID to mention.
+        is_test: Whether this is a test invocation.
     """
     try:
         channel = _get_channel(bot, channel_id)
@@ -116,14 +119,16 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
 
 async def send_evening_reminder(bot, channel_id: str, role_id: str):
     """
-    저녁 리마인더 메시지를 전송합니다.
-    오늘 출석 체크에 ✅ 반응을 누른 멤버들에게 회고 모임 리마인더를 보냅니다.
-    참여자가 없으면 안내 메시지를 전송합니다.
+    Send the evening reminder to confirmed participants.
+
+    Fetches today's latest attendance message, collects members
+    who reacted with the check emoji, and sends an appropriate
+    reminder or a "no participants" notice.
 
     Args:
-        bot: Discord 봇 인스턴스
-        channel_id: 메시지를 전송할 채널 ID
-        role_id: 필터링할 역할 ID
+        bot: The Discord bot instance.
+        channel_id: Target channel ID.
+        role_id: Role ID to filter by.
     """
     try:
         channel = _get_channel(bot, channel_id)

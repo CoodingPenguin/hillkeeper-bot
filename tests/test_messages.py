@@ -1,4 +1,4 @@
-"""messages.py 테스트"""
+"""Tests for messages.py."""
 from hillkeeper.config import EMOJI_CHECK, EMOJI_CROSS
 from hillkeeper.messages import (
     create_morning_check_embed,
@@ -15,7 +15,7 @@ class TestCreateMorningCheckEmbed:
 
     def test_embed_title(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)
-        assert "출석" in embed.title or "참석" in embed.title
+        assert "회고" in embed.title or "참석" in embed.title
 
     def test_embed_description_contains_emojis(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)

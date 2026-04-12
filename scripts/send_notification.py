@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 """
-임시 스크립트: 출석 알림 수동 발송
+Manual notification sender.
 
-사용법:
-  # Morning check 발송
+Usage:
   $ python scripts/send_notification.py morning
-
-  # Evening reminder 발송
   $ python scripts/send_notification.py evening
 
-주의:
-  - 실제 ATTENDANCE_CHANNEL에 알림을 발송합니다
-  - 봇이 종료되지 않으면 Ctrl+C로 강제 종료하세요
+Note:
+  - Sends to the real ATTENDANCE_CHANNEL.
+  - Press Ctrl+C to force-quit if the bot does not exit.
 """
 import asyncio
 import sys
@@ -24,8 +21,7 @@ from hillkeeper.database.redis import redis_client
 
 
 async def main(notification_type: str):
-    """알림을 수동으로 발송합니다."""
-    # Bot 초기화
+    """Send a notification manually."""
     intents = discord.Intents.default()
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents)
@@ -35,11 +31,9 @@ async def main(notification_type: str):
         print(f'Bot connected as {bot.user}')
 
         try:
-            # Redis 연결
             await redis_client.connect()
             print('Redis connected')
 
-            # 알림 발송
             channel_id = get_env('ATTENDANCE_CHANNEL_ID', required=True)
             role_id = get_env('RETROSPECTIVE_ROLE_ID', required=True)
 
@@ -58,7 +52,6 @@ async def main(notification_type: str):
             await redis_client.close()
             await bot.close()
 
-    # Bot 실행
     token = get_env('DISCORD_TOKEN', required=True)
     await bot.start(token)
 

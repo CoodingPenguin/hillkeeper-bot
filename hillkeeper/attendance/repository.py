@@ -1,3 +1,4 @@
+"""Attendance data access layer (Redis)."""
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -12,7 +13,7 @@ TTL_7_DAYS = 604800  # 7 days
 
 @dataclass(frozen=True, slots=True)
 class AttendanceEvent:
-    """출석 체크 이벤트 데이터입니다."""
+    """Immutable representation of an attendance check event."""
     message_id: int
     channel_id: int
     role_id: int
@@ -21,7 +22,7 @@ class AttendanceEvent:
 
 @dataclass(frozen=True, slots=True)
 class UserResponse:
-    """사용자 출석 응답 데이터입니다."""
+    """Immutable representation of a user's attendance response."""
     user_id: int
     username: str
     response: str
@@ -29,30 +30,29 @@ class UserResponse:
 
 
 def _event_key(date, message_id: int) -> str:
-    """출석 이벤트 Redis 키를 생성합니다."""
+    """Build the Redis key for an attendance event."""
     return f"attendance:event:{date}:{message_id}"
 
 
 def _response_key(message_id: int, user_id: int) -> str:
-    """사용자 응답 Redis 키를 생성합니다."""
+    """Build the Redis key for a user response."""
     return f"attendance:response:{message_id}:{user_id}"
 
 
 def _parse_id_from_key(key: str) -> int:
-    """Redis 키에서 마지막 ID를 추출합니다."""
+    """Extract the trailing numeric ID from a Redis key."""
     return int(key.split(":")[-1])
 
 
 async def save_event(message_id: int, *, channel_id: int, role_id: int, ttl: int = TTL_7_DAYS):
     """
-    출석 체크 이벤트를 저장합니다.
-    메시지 정보와 함께 출석 이벤트를 Redis에 저장하고 TTL을 설정합니다.
+    Persist an attendance check event to Redis.
 
     Args:
-        message_id: 디스코드 메시지 ID
-        channel_id: 채널 ID
-        role_id: 멘션할 역할 ID
-        ttl: 만료 시간(초) (기본값: 7일)
+        message_id: Discord message ID.
+        channel_id: Channel ID.
+        role_id: Mentioned role ID.
+        ttl: Expiry in seconds (default: 7 days).
     """
     now = datetime.now(KST)
     date = now.date()
@@ -73,14 +73,13 @@ async def save_event(message_id: int, *, channel_id: int, role_id: int, ttl: int
 
 async def save_response(message_id: int, user_id: int, *, username: str, response: str):
     """
-    사용자 응답을 저장합니다.
-    출석 체크 메시지에 대한 사용자의 이모지 반응을 Redis에 저장합니다.
+    Persist a user's emoji response to Redis.
 
     Args:
-        message_id: 디스코드 메시지 ID
-        user_id: 사용자 ID
-        username: 사용자 표시 이름
-        response: 응답 유형 ("yes" 또는 "no")
+        message_id: Discord message ID.
+        user_id: User ID.
+        username: User display name.
+        response: "yes" or "no".
     """
     now = datetime.now(KST)
 
@@ -99,12 +98,7 @@ async def save_response(message_id: int, user_id: int, *, username: str, respons
 
 
 async def get_today_messages() -> list[int]:
-    """
-    오늘 생성된 출석 체크 메시지 ID 목록을 반환합니다.
-
-    Returns:
-        오늘 날짜의 출석 메시지 ID 리스트
-    """
+    """Return message IDs for today's attendance events."""
     date = datetime.now(KST).date()
     pattern = f"attendance:event:{date}:*"
 
@@ -117,14 +111,14 @@ async def get_today_messages() -> list[int]:
 
 async def get_event(message_id: int, date: datetime.date = None) -> AttendanceEvent | None:
     """
-    특정 이벤트 정보를 조회합니다.
+    Fetch an attendance event by message ID.
 
     Args:
-        message_id: 메시지 ID
-        date: 조회할 날짜 (기본값: 오늘)
+        message_id: The message ID.
+        date: Date to look up (defaults to today).
 
     Returns:
-        AttendanceEvent 객체. 존재하지 않으면 None
+        An AttendanceEvent, or None if not found.
     """
     if date is None:
         date = datetime.now(KST).date()
@@ -145,13 +139,13 @@ async def get_event(message_id: int, date: datetime.date = None) -> AttendanceEv
 
 async def get_responses(message_id: int) -> list[UserResponse]:
     """
-    특정 메시지에 대한 모든 응답을 조회합니다.
+    Fetch all user responses for a given message.
 
     Args:
-        message_id: 메시지 ID
+        message_id: The message ID.
 
     Returns:
-        UserResponse 객체 리스트
+        A list of UserResponse objects.
     """
     pattern = f"attendance:response:{message_id}:*"
 
@@ -171,11 +165,11 @@ async def get_responses(message_id: int) -> list[UserResponse]:
 
 async def delete_event(message_id: int, date: datetime.date = None):
     """
-    특정 이벤트를 삭제합니다.
+    Delete an attendance event from Redis.
 
     Args:
-        message_id: 메시지 ID
-        date: 조회할 날짜 (기본값: 오늘)
+        message_id: The message ID.
+        date: Date to look up (defaults to today).
     """
     if date is None:
         date = datetime.now(KST).date()

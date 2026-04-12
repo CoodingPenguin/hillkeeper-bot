@@ -1,4 +1,4 @@
-"""discord 이벤트 핸들러"""
+"""Discord event handlers."""
 import logging
 
 from ..config import EMOJI_CHECK, EMOJI_CROSS
@@ -9,26 +9,26 @@ logger = logging.getLogger('hillkeeper')
 
 async def handle_attendance_reaction(bot, payload):
     """
-    출석 체크 메시지에 대한 이모지 반응을 처리합니다.
-    하나만 선택 가능하도록 반대쪽 이모지는 자동으로 제거합니다.
+    Process an emoji reaction on an attendance check message.
+
+    Enforces exclusive selection by removing the opposite emoji
+    and persists the user's response to Redis.
 
     Args:
-        bot: Discord 봇 인스턴스
-        payload: 반응 이벤트 페이로드
+        bot: The Discord bot instance.
+        payload: The raw reaction event payload.
     """
     if payload.user_id == bot.user.id:
         return
 
-    # ✅ 또는 ❌ 반응만 처리
     if str(payload.emoji) not in [EMOJI_CHECK, EMOJI_CROSS]:
         return
 
-    # 출석 체크 메시지인지 확인 (Redis에 저장된 이벤트인지 체크)
+    # Only handle reactions on tracked attendance messages
     event = await repository.get_event(payload.message_id)
     if not event:
         return
 
-    # 사용자 정보 가져오기
     guild = bot.get_guild(payload.guild_id)
     if not guild:
         return
@@ -37,7 +37,6 @@ async def handle_attendance_reaction(bot, payload):
     if not member:
         return
 
-    # 메시지 가져오기
     try:
         channel = bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
@@ -45,14 +44,13 @@ async def handle_attendance_reaction(bot, payload):
         logger.error(f"Failed to fetch message {payload.message_id}: {e}")
         return
 
-    # 반대쪽 이모지 제거 (하나만 선택 가능)
+    # Remove the opposite emoji to enforce single selection
     opposite_emoji = EMOJI_CROSS if str(payload.emoji) == EMOJI_CHECK else EMOJI_CHECK
     try:
         await message.remove_reaction(opposite_emoji, member)
     except Exception as e:
         logger.debug(f"Failed to remove opposite reaction: {e}")
 
-    # Redis에 응답 저장
     response = "yes" if str(payload.emoji) == EMOJI_CHECK else "no"
     await repository.save_response(
         payload.message_id,
@@ -65,15 +63,13 @@ async def handle_attendance_reaction(bot, payload):
 
 
 def register_events(bot):
-    """봇에 이벤트 핸들러를 등록합니다."""
+    """Register event handlers on the bot."""
 
     @bot.event
     async def on_ready():
-        """봇이 준비되었을 때 실행됩니다."""
         logger.info(f'Bot is ready: {bot.user}')
         logger.info(f'Bot ID: {bot.user.id}')
 
     @bot.event
     async def on_raw_reaction_add(payload):
-        """이모지 반응이 추가될 때 실행됩니다."""
         await handle_attendance_reaction(bot, payload)

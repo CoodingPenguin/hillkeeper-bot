@@ -11,7 +11,6 @@ from hillkeeper.bot.events import register_events
 from hillkeeper.bot.tasks import register_tasks
 from hillkeeper.database.redis import redis_client
 
-# 로깅 설정
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s - %(message)s',
@@ -30,8 +29,7 @@ class HillkeeperBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
-        """봇 시작 시 초기화 작업을 수행합니다."""
-        # Redis 연결 (재시도 포함)
+        """Initialize Redis connection and register scheduled tasks."""
         for attempt in range(1, 4):
             try:
                 await redis_client.connect()
@@ -43,7 +41,6 @@ class HillkeeperBot(discord.Client):
         else:
             logger.error("Failed to connect to Redis after 3 attempts")
 
-        # 태스크 스케쥴링 등록
         register_tasks(self)
 
 
@@ -53,10 +50,10 @@ async def health_check(request):
 
 async def start_web_server() -> web.AppRunner:
     """
-    Render 포트 바인딩을 위한 웹 서버를 시작합니다.
+    Start a minimal web server for Render's port-binding requirement.
 
     Returns:
-        종료 시 정리를 위한 AppRunner 인스턴스
+        The AppRunner instance for cleanup on shutdown.
     """
     app = web.Application()
     app.router.add_get('/', health_check)
@@ -72,19 +69,12 @@ async def start_web_server() -> web.AppRunner:
 
 
 async def main_async():
-    # 봇 인스턴스 생성
     bot = HillkeeperBot()
-
-    # 이벤트 핸들러 등록
     register_events(bot)
-
-    # 명령어 등록
     register_commands(bot)
 
-    # 웹 서버 시작 (Render 포트 바인딩용)
     runner = await start_web_server()
 
-    # 봇 실행
     token = get_env('DISCORD_TOKEN', required=True)
     logger.info('Starting bot...')
     try:

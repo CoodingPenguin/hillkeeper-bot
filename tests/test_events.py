@@ -1,4 +1,4 @@
-"""events.py 테스트"""
+"""Tests for events.py."""
 import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 

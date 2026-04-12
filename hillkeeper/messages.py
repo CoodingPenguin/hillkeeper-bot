@@ -1,18 +1,18 @@
-"""메시지 템플릿"""
+"""Discord message templates."""
 import discord
 from .config import EMOJI_CHECK, EMOJI_CROSS, COLOR_BLUE, COLOR_YELLOW, COLOR_DARK_BLUE
 
 
 def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str, discord.Embed]:
     """
-    아침 출석 체크 Embed를 생성합니다.
+    Build the morning attendance check embed.
 
     Args:
-        role_id: 멘션할 역할 ID
-        voice_channel_id: 음성 채널 ID
+        role_id: Role ID to mention.
+        voice_channel_id: Voice channel ID to link.
 
     Returns:
-        (content, embed) 튜플
+        A (content, embed) tuple.
     """
     content = f"<@&{role_id}>"
 
@@ -37,14 +37,14 @@ def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str
 
 def create_evening_reminder_embed(mentions: str, voice_channel_id: int) -> tuple[str, discord.Embed]:
     """
-    저녁 리마인더 Embed를 생성합니다.
+    Build the evening reminder embed.
 
     Args:
-        mentions: 멘션할 사용자 문자열
-        voice_channel_id: 음성 채널 ID
+        mentions: Mention string for participating users.
+        voice_channel_id: Voice channel ID to link.
 
     Returns:
-        (content, embed) 튜플
+        A (content, embed) tuple.
     """
     content = mentions
 
@@ -59,10 +59,10 @@ def create_evening_reminder_embed(mentions: str, voice_channel_id: int) -> tuple
 
 def create_no_participants_embed() -> discord.Embed:
     """
-    참여자 없음 Embed를 생성합니다.
+    Build the "no participants" embed.
 
     Returns:
-        embed 객체
+        A discord.Embed instance.
     """
     embed = discord.Embed(
         title="🐮 언덕지기가 혼자 언덕을 지키고 있어요!",
