@@ -8,7 +8,7 @@ from aiohttp import web
 from hillkeeper.config import get_env
 from hillkeeper.bot.commands import register_commands
 from hillkeeper.bot.events import register_events
-from hillkeeper.bot.tasks import register_tasks
+from hillkeeper.bot.tasks import register_tasks, initialize_task_schedule
 from hillkeeper.database.redis import redis_client
 
 logging.basicConfig(
@@ -42,6 +42,7 @@ class HillkeeperBot(discord.Client):
             logger.error("Failed to connect to Redis after 3 attempts")
 
         register_tasks(self)
+        await initialize_task_schedule(self)
 
 
 async def health_check(request):

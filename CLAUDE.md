@@ -11,8 +11,10 @@ This document defines the rules and context that Claude Code should follow when 
 **hillkeeper-bot** is a Discord bot for managing attendance at weekly retrospective meetings.
 
 ### Key Features
-- **Thursday 9:00 AM KST**: Send attendance check message mentioning `@회고` role with ✅/❌ emoji reactions
-- **Thursday 9:45 PM KST**: Send reminder mentioning only participants who checked in
+- **Default Thursday 9:00 AM KST**: Send attendance check message mentioning `@회고` role with ✅/❌ emoji reactions
+- **15 min before meeting**: Send reminder mentioning only participants who checked in
+- **Dynamic scheduling**: `/reschedule once|default|skip` commands to change meeting day/time
+- **Schedule view**: `/schedule` command to check current settings
 
 ### Tech Stack
 - Python 3.13+
@@ -59,12 +61,15 @@ hillkeeper-bot/
 │   ├── attendance/             # Attendance domain
 │   │   ├── repository.py      # Data access (functional)
 │   │   └── service.py         # Business logic
+│   ├── schedule/               # Schedule domain
+│   │   ├── repository.py      # Schedule data access (Redis)
+│   │   └── service.py         # Schedule business logic
 │   ├── database/               # Infrastructure
 │   │   └── redis.py           # Redis client
 │   └── bot/                    # Discord interface
-│       ├── commands.py        # Slash commands
+│       ├── commands.py        # Slash commands (incl. RescheduleGroup)
 │       ├── events.py          # Event handlers
-│       └── tasks.py           # Scheduled tasks
+│       └── tasks.py           # Scheduled tasks (dynamic via Redis)
 ├── pyproject.toml
 └── poetry.lock
 ```
@@ -224,6 +229,10 @@ TEST_ROLE_ID=test_role_id
 - `/ping` - Check bot latency
 - `/test_morning_check` - Test morning attendance check message (uses TEST_CHANNEL_ID)
 - `/test_evening_reminder` - Test evening reminder message (uses TEST_CHANNEL_ID)
+- `/reschedule once <day> <time>` - One-time schedule change (this week only)
+- `/reschedule default <day> <time>` - Permanent schedule change
+- `/reschedule skip` - Cancel this week's meeting
+- `/schedule` - View current meeting schedule
 
 ## Work Checklist
 
@@ -308,6 +317,14 @@ attendance:event:{date}:{message_id}
 # User response (7 days TTL)
 attendance:response:{message_id}:{user_id}
   - user_id, username, response (yes/no), timestamp
+
+# Default meeting schedule (no TTL)
+schedule:default
+  - weekday, hour, minute, updated_by (user_id), updated_at
+
+# One-time schedule override (7 days TTL)
+schedule:override:{YYYY-MM-DD}
+  - date, hour, minute, is_skip, created_by (user_id), created_at
 ```
 
 ### Repository Pattern (Functional)
