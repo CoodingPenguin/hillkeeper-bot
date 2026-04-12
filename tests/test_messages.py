@@ -15,7 +15,7 @@ class TestCreateMorningCheckEmbed:
 
     def test_embed_title(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)
-        assert "회고" in embed.title or "참석" in embed.title
+        assert embed.title == "📋️회고 모임 참석 여부 확인"
 
     def test_embed_description_contains_emojis(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)
@@ -33,7 +33,7 @@ class TestCreateMorningCheckEmbed:
 
     def test_embed_footer(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)
-        assert embed.footer.text is not None
+        assert embed.footer.text == "⚠️ 참석과 불참을 모두 누르면 마지막 선택만 남아요."
 
     def test_embed_color(self):
         _, embed = create_morning_check_embed(role_id=200, voice_channel_id=300)
@@ -60,11 +60,11 @@ class TestCreateNoParticipantsEmbed:
 
     def test_embed_has_title(self):
         embed = create_no_participants_embed()
-        assert embed.title is not None
+        assert embed.title == "🐮 언덕지기가 혼자 언덕을 지키고 있어요!"
 
     def test_description_contains_story_prompt(self):
         embed = create_no_participants_embed()
-        assert "이야기" in embed.description
+        assert "언덕지기에게 이번 주 이야기를 조금 들려주세요!" in embed.description
 
     def test_embed_color(self):
         embed = create_no_participants_embed()

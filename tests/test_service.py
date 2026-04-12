@@ -15,9 +15,12 @@ FIXED_THURSDAY = datetime.datetime(2026, 4, 9, 9, 0, 0, tzinfo=KST)
 
 class TestSendMorningCheck:
 
-    async def test_sends_message(self, mock_bot, env_vars, fake_redis):
+    async def test_sends_message_with_content_and_embed(self, mock_bot, env_vars, fake_redis):
         await send_morning_check(mock_bot, "100", "200")
         mock_bot._mock_channel.send.assert_called_once()
+        call_kwargs = mock_bot._mock_channel.send.call_args[1]
+        assert "content" in call_kwargs
+        assert "embed" in call_kwargs
 
     async def test_adds_two_reactions(self, mock_bot, env_vars, fake_redis):
         await send_morning_check(mock_bot, "100", "200")
@@ -136,6 +139,8 @@ class TestSendEveningReminder:
 
         call_kwargs = mock_bot._mock_channel.send.call_args[1]
         assert "content" not in call_kwargs or call_kwargs.get("content") is None
+        embed = call_kwargs["embed"]
+        assert "언덕지기" in embed.title
 
     async def test_raises_when_no_messages_today(self, mock_bot, env_vars, fake_redis):
         with patch("hillkeeper.attendance.repository.datetime") as mock_dt:

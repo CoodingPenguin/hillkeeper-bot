@@ -38,7 +38,7 @@ class TestSaveEvent:
         assert mapping["message_id"] == "12345"
         assert mapping["channel_id"] == "100"
         assert mapping["role_id"] == "200"
-        assert "created_at" in mapping
+        assert mapping["created_at"] == FIXED_THURSDAY.isoformat()
 
     async def test_sets_default_ttl(self, fake_redis):
         await repository.save_event(12345, channel_id=100, role_id=200)
