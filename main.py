@@ -31,15 +31,17 @@ class HillkeeperBot(discord.Client):
 
     async def setup_hook(self):
         """봇 시작 시 초기화 작업을 수행합니다."""
-        # Redis 연결
-        await redis_client.connect()
-
-        try:
-            # slash command 동기화
-            await self.tree.sync()
-            logger.info("Slash commands synced successfully")
-        except Exception as e:
-            logger.error(f"Failed to sync commands: {e}")
+        # Redis 연결 (재시도 포함)
+        for attempt in range(1, 4):
+            try:
+                await redis_client.connect()
+                break
+            except Exception as e:
+                wait = 2 ** attempt
+                logger.warning(f"Redis connection attempt {attempt}/3 failed: {e}, retrying in {wait}s...")
+                await asyncio.sleep(wait)
+        else:
+            logger.error("Failed to connect to Redis after 3 attempts")
 
         # 태스크 스케쥴링 등록
         register_tasks(self)
@@ -49,8 +51,13 @@ async def health_check(request):
     return web.Response(text='OK')
 
 
-async def start_web_server():
-    """Render 포트 바인딩을 위한 웹 서버"""
+async def start_web_server() -> web.AppRunner:
+    """
+    Render 포트 바인딩을 위한 웹 서버를 시작합니다.
+
+    Returns:
+        종료 시 정리를 위한 AppRunner 인스턴스
+    """
     app = web.Application()
     app.router.add_get('/', health_check)
     app.router.add_get('/health', health_check)
@@ -61,6 +68,7 @@ async def start_web_server():
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
     logger.info(f'Health check server started on port {port}')
+    return runner
 
 
 async def main_async():
@@ -74,12 +82,20 @@ async def main_async():
     register_commands(bot)
 
     # 웹 서버 시작 (Render 포트 바인딩용)
-    await start_web_server()
+    runner = await start_web_server()
 
     # 봇 실행
     token = get_env('DISCORD_TOKEN', required=True)
     logger.info('Starting bot...')
-    await bot.start(token)
+    try:
+        await bot.start(token)
+    finally:
+        logger.info('Shutting down bot...')
+        await bot.close()
+        await redis_client.disconnect()
+        if runner:
+            await runner.cleanup()
+        logger.info('Shutdown complete')
 
 
 def main():
