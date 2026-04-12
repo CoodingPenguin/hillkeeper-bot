@@ -1,6 +1,6 @@
 """메시지 템플릿"""
 import discord
-from .config import EMOJI_CHECK, EMOJI_CROSS
+from .config import EMOJI_CHECK, EMOJI_CROSS, COLOR_BLUE, COLOR_YELLOW, COLOR_DARK_BLUE
 
 
 def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str, discord.Embed]:
@@ -24,7 +24,7 @@ def create_morning_check_embed(role_id: int, voice_channel_id: int) -> tuple[str
             f"- {EMOJI_CHECK} `참석합니다`\n"
             f"- {EMOJI_CROSS} `불참합니다`"
         ),
-        color=0x58ABFF,  # 파란색
+        color=COLOR_BLUE,
     )
 
     embed.add_field(name="시간", value="오늘 오후 10시", inline=True)
@@ -51,7 +51,7 @@ def create_evening_reminder_embed(mentions: str, voice_channel_id: int) -> tuple
     embed = discord.Embed(
         title="🔔 회고 모임 시작 알림",
         description=f"곧 회고 모임이 시작돼요!\n15분 후(오후 10시) <#{voice_channel_id}>로 들어와 주세요.",
-        color=0xF1C40F  # 주황색
+        color=COLOR_YELLOW,
     )
 
     return content, embed
@@ -67,7 +67,7 @@ def create_no_participants_embed() -> discord.Embed:
     embed = discord.Embed(
         title="🐮 언덕지기가 혼자 언덕을 지키고 있어요!",
         description="오늘은 언덕을 잘 지켜둘게요.\n다음 주에 만나요!",
-        color=0x34A5DB  # 진한 파란색
+        color=COLOR_DARK_BLUE,
     )
 
     return embed

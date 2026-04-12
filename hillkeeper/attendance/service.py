@@ -1,11 +1,78 @@
 import logging
 
+import discord
+
 from ..config import EMOJI_CHECK, EMOJI_CROSS, get_env
 from ..messages import create_morning_check_embed, create_evening_reminder_embed, create_no_participants_embed
 from ..utils import get_users_who_reacted
 from . import repository
 
 logger = logging.getLogger('hillkeeper')
+
+
+def _get_channel(bot, channel_id: str) -> discord.TextChannel | None:
+    """
+    채널 객체를 가져옵니다. 없으면 로그를 남기고 None을 반환합니다.
+
+    Args:
+        bot: Discord 봇 인스턴스
+        channel_id: 채널 ID 문자열
+    """
+    channel = bot.get_channel(int(channel_id))
+    if not channel:
+        logger.error(f"Channel not found: {channel_id}")
+    return channel
+
+
+async def _get_participated_members(
+    channel, message_id: int, role: discord.Role
+) -> set[discord.Member]:
+    """
+    출석 체크 메시지에서 참여한 멤버를 수집합니다.
+
+    Args:
+        channel: Discord 채널
+        message_id: 출석 체크 메시지 ID
+        role: 필터링할 역할
+
+    Returns:
+        참여한 멤버 집합
+
+    Raises:
+        ValueError: 메시지를 가져오지 못한 경우
+    """
+    try:
+        message = await channel.fetch_message(message_id)
+        return await get_users_who_reacted(
+            message,
+            EMOJI_CHECK,
+            exclude_bots=True,
+            filter_role=role
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch message {message_id}: {e}")
+        await repository.delete_event(message_id)
+        raise ValueError(f"Failed to fetch attendance message: {message_id}") from e
+
+
+async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
+    """
+    참여자 수에 따라 리마인더 또는 안내 메시지를 전송합니다.
+
+    Args:
+        channel: Discord 채널
+        members: 참여한 멤버 집합
+        voice_channel_id: 음성 채널 ID 문자열
+    """
+    if members and len(members) > 1:
+        mentions = " ".join([member.mention for member in members])
+        content, embed = create_evening_reminder_embed(mentions, int(voice_channel_id))
+        await channel.send(content=content, embed=embed)
+        logger.info(f"Evening reminder sent to {len(members)} members")
+    else:
+        embed = create_no_participants_embed()
+        await channel.send(embed=embed)
+        logger.info(f"Not enough participants: {len(members) if members else 0} members")
 
 
 async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: bool = False):
@@ -21,9 +88,8 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
         is_test: 테스트 모드 여부 (기본값: False)
     """
     try:
-        channel = bot.get_channel(int(channel_id))
+        channel = _get_channel(bot, channel_id)
         if not channel:
-            logger.error(f"Channel not found: {channel_id}")
             return
 
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
@@ -33,7 +99,6 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
         await message.add_reaction(EMOJI_CHECK)
         await message.add_reaction(EMOJI_CROSS)
 
-        # Redis에 이벤트 저장 (테스트: 1분, 프로덕션: 7일)
         ttl = 60 if is_test else repository.TTL_7_DAYS
         await repository.save_event(
             message.id,
@@ -61,57 +126,27 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         role_id: 필터링할 역할 ID
     """
     try:
-        channel = bot.get_channel(int(channel_id))
+        channel = _get_channel(bot, channel_id)
         if not channel:
-            logger.error(f"Channel not found: {channel_id}")
             return
 
-        guild = channel.guild
-        role = guild.get_role(int(role_id))
+        role = channel.guild.get_role(int(role_id))
         if not role:
             logger.error(f"Role not found: {role_id}")
             return
 
-        # Redis에서 오늘 메시지 ID 가져오기
         message_ids = await repository.get_today_messages()
-
         if not message_ids:
             raise ValueError("No attendance messages found for today")
 
-        # 최신 메시지만 사용
         latest_message_id = max(message_ids)
         logger.info(f"Using latest attendance message: {latest_message_id}")
 
-        # 최신 메시지에서 참여한 멤버 수집
-        try:
-            message = await channel.fetch_message(latest_message_id)
-            participated_members = await get_users_who_reacted(
-                message,
-                EMOJI_CHECK,
-                exclude_bots=True,
-                filter_role=role
-            )
-        except Exception as e:
-            logger.error(f"Failed to fetch message {latest_message_id}: {e}")
-            # 실패한 메시지는 Redis에서 삭제
-            await repository.delete_event(latest_message_id)
-            raise ValueError(f"Failed to fetch attendance message: {latest_message_id}") from e
+        members = await _get_participated_members(channel, latest_message_id, role)
 
-        # 리마인더 메시지 전송
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
-
-        if participated_members and len(participated_members) > 1:
-            mentions = " ".join([member.mention for member in participated_members])
-            content, embed = create_evening_reminder_embed(mentions, int(voice_channel_id))
-            await channel.send(content=content, embed=embed)
-            logger.info(f"Evening reminder sent to {len(participated_members)} members")
-        else:
-            embed = create_no_participants_embed()
-            await channel.send(embed=embed)
-            logger.info(f"Not enough participants: {len(participated_members) if participated_members else 0} members")
+        await _send_reminder_or_empty(channel, members, voice_channel_id)
 
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")
         raise
-
-

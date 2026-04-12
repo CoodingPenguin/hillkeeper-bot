@@ -17,6 +17,11 @@ EMOJI_CHECK = "✅"
 EMOJI_CROSS = "❌"
 EMOJI_MIC = "🎤"
 
+# 색상 상수
+COLOR_BLUE = 0x58ABFF
+COLOR_YELLOW = 0xF1C40F
+COLOR_DARK_BLUE = 0x34A5DB
+
 
 def get_env(key: str, *, default: str = None, required: bool = False) -> str:
     """
