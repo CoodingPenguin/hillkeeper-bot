@@ -66,7 +66,7 @@ def create_no_participants_embed() -> discord.Embed:
     """
     embed = discord.Embed(
         title="🐮 언덕지기가 혼자 언덕을 지키고 있어요!",
-        description="오늘은 언덕을 잘 지켜둘게요.\n다음 주에 만나요!",
+        description="오늘은 언덕을 잘 지켜둘게요.\n다음 주에 만나요!\n\n📖 대신, 언덕지기에게 이번 주 이야기를 들려주세요!",
         color=COLOR_DARK_BLUE,
     )
 

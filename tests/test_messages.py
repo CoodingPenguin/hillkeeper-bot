@@ -62,6 +62,10 @@ class TestCreateNoParticipantsEmbed:
         embed = create_no_participants_embed()
         assert embed.title is not None
 
+    def test_description_contains_story_prompt(self):
+        embed = create_no_participants_embed()
+        assert "이야기" in embed.description
+
     def test_embed_color(self):
         embed = create_no_participants_embed()
         assert embed.color.value == 0x34A5DB
