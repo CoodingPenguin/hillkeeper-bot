@@ -2,10 +2,8 @@ name: Keep Render Service Alive
 
 on:
   schedule:
-    - cron: '3,13,23,33,43,53 * * * *'
-    - cron: '4,14,24,34,44,54 * * * *'
-    - cron: '7,17,27,37,47,57 * * * *'
-    - cron: '8,18,28,38,48,58 * * * *'
+    - cron: '5,20,35,50 * * * *'
+    - cron: '12,27,42,57 * * * *'
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
