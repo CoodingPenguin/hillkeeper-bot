@@ -69,6 +69,11 @@ def register_events(bot):
     async def on_ready():
         logger.info(f'Bot is ready: {bot.user}')
         logger.info(f'Bot ID: {bot.user.id}')
+        try:
+            synced = await bot.tree.sync()
+            logger.info(f"Synced {len(synced)} slash command(s)")
+        except Exception as e:
+            logger.error(f"Failed to sync slash commands: {e}")
 
     @bot.event
     async def on_raw_reaction_add(payload):
