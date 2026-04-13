@@ -6,8 +6,8 @@ import discord
 from discord import app_commands
 
 from ..config import (
-    KST, DAY_NAMES_REVERSE, REMINDER_LEAD_MINUTES,
-    DEFAULT_MEETING_HOUR, DEFAULT_MEETING_MINUTE, get_env,
+    KST, DAY_NAMES, DAY_NAMES_REVERSE,
+    calculate_reminder_time, get_env,
 )
 from ..attendance.service import send_morning_check, send_evening_reminder
 from ..schedule import service as schedule_service
@@ -22,13 +22,8 @@ from ..messages import (
 logger = logging.getLogger('hillkeeper')
 
 DAY_CHOICES = [
-    app_commands.Choice(name="월요일", value=0),
-    app_commands.Choice(name="화요일", value=1),
-    app_commands.Choice(name="수요일", value=2),
-    app_commands.Choice(name="목요일", value=3),
-    app_commands.Choice(name="금요일", value=4),
-    app_commands.Choice(name="토요일", value=5),
-    app_commands.Choice(name="일요일", value=6),
+    app_commands.Choice(name=name, value=value)
+    for name, value in DAY_NAMES.items()
 ]
 
 
@@ -57,13 +52,6 @@ def _parse_time(time_str: str) -> tuple[int, int]:
         raise ValueError(f"시간 형식이 올바르지 않습니다: {time_str} (HH:MM 형식으로 입력해주세요)")
 
 
-def _calculate_reminder_time(*, hour: int, minute: int) -> datetime.time:
-    """Calculate the reminder time (15 min before meeting)."""
-    meeting = datetime.datetime(2000, 1, 1, hour, minute)
-    reminder = meeting - datetime.timedelta(minutes=REMINDER_LEAD_MINUTES)
-    return datetime.time(hour=reminder.hour, minute=reminder.minute, tzinfo=KST)
-
-
 async def _update_today_evening_reminder(bot, weekday: int, hour: int, minute: int):
     """
     If the changed schedule affects today, update the evening reminder timer.
@@ -76,7 +64,7 @@ async def _update_today_evening_reminder(bot, weekday: int, hour: int, minute: i
     """
     today = datetime.datetime.now(KST).date()
     if today.weekday() == weekday:
-        reminder_time = _calculate_reminder_time(hour=hour, minute=minute)
+        reminder_time = calculate_reminder_time(hour=hour, minute=minute)
         if hasattr(bot, 'evening_reminder'):
             bot.evening_reminder.change_interval(time=reminder_time)
             logger.info(f"Updated today's evening reminder to {reminder_time.hour:02d}:{reminder_time.minute:02d}")
@@ -113,7 +101,7 @@ class RescheduleGroup(app_commands.Group):
 
         try:
             hour, minute = _parse_time(time)
-            message = await schedule_service.reschedule_once(
+            await schedule_service.reschedule_once(
                 weekday=day.value, hour=hour, minute=minute,
                 user_id=interaction.user.id,
             )
@@ -149,7 +137,7 @@ class RescheduleGroup(app_commands.Group):
 
         try:
             hour, minute = _parse_time(time)
-            message = await schedule_service.reschedule_default(
+            await schedule_service.reschedule_default(
                 weekday=day.value, hour=hour, minute=minute,
                 user_id=interaction.user.id,
             )
@@ -175,7 +163,7 @@ class RescheduleGroup(app_commands.Group):
         await interaction.response.defer(ephemeral=True)
 
         try:
-            message = await schedule_service.skip_this_week(
+            await schedule_service.skip_this_week(
                 user_id=interaction.user.id,
             )
 
@@ -290,5 +278,4 @@ def register_commands(bot):
             await interaction.followup.send(f"❌ 오류가 발생했습니다: {e}", ephemeral=True)
             logger.error(f"Schedule view failed: {e}")
 
-    # Register the reschedule command group
     bot.tree.add_command(RescheduleGroup())

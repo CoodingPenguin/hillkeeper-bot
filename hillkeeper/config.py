@@ -1,4 +1,5 @@
 """Configuration and constants."""
+import datetime
 import os
 from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
@@ -32,6 +33,13 @@ COLOR_BLUE = 0x58ABFF
 COLOR_YELLOW = 0xF1C40F
 COLOR_DARK_BLUE = 0x34A5DB
 COLOR_GREEN = 0x2ECC71
+
+
+def calculate_reminder_time(*, hour: int, minute: int) -> datetime.time:
+    """Calculate the reminder time (REMINDER_LEAD_MINUTES before meeting)."""
+    meeting = datetime.datetime(2000, 1, 1, hour, minute)
+    reminder = meeting - datetime.timedelta(minutes=REMINDER_LEAD_MINUTES)
+    return datetime.time(hour=reminder.hour, minute=reminder.minute, tzinfo=KST)
 
 
 def get_env(key: str, *, default: str = None, required: bool = False) -> str:

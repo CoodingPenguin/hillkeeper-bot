@@ -3,30 +3,14 @@ import datetime
 import logging
 from discord.ext import tasks
 
-from ..config import KST, REMINDER_LEAD_MINUTES, DEFAULT_MEETING_HOUR, DEFAULT_MEETING_MINUTE, get_env
+from ..config import KST, DEFAULT_MEETING_HOUR, DEFAULT_MEETING_MINUTE, calculate_reminder_time, get_env
 from ..attendance.service import send_morning_check, send_evening_reminder
 from ..schedule import repository as schedule_repository
 
 logger = logging.getLogger('hillkeeper')
 
 
-def _calculate_reminder_time(*, hour: int, minute: int) -> datetime.time:
-    """
-    Calculate the reminder time (REMINDER_LEAD_MINUTES before meeting).
-
-    Args:
-        hour: Meeting hour.
-        minute: Meeting minute.
-
-    Returns:
-        A datetime.time for the reminder, in KST.
-    """
-    meeting = datetime.datetime(2000, 1, 1, hour, minute)
-    reminder = meeting - datetime.timedelta(minutes=REMINDER_LEAD_MINUTES)
-    return datetime.time(hour=reminder.hour, minute=reminder.minute, tzinfo=KST)
-
-
-async def _run_scheduled_task(task_name: str, service_fn, bot):
+async def _run_scheduled_task(task_name: str, service_fn, bot, *, schedule=None):
     """
     Guard logic for scheduled tasks. Checks Redis for today's schedule
     and validates required environment variables before calling the
@@ -36,9 +20,11 @@ async def _run_scheduled_task(task_name: str, service_fn, bot):
         task_name: Human-readable name used in log messages.
         service_fn: Async service function to invoke.
         bot: The Discord bot instance.
+        schedule: Pre-fetched schedule tuple, or None to fetch from Redis.
     """
-    now = datetime.datetime.now(KST)
-    schedule = await schedule_repository.get_effective_schedule_for_date(now.date())
+    if schedule is None:
+        now = datetime.datetime.now(KST)
+        schedule = await schedule_repository.get_effective_schedule_for_date(now.date())
 
     if schedule is None:
         logger.info(f"No meeting scheduled today, skipping {task_name}")
@@ -66,11 +52,11 @@ def _create_morning_check_task(bot):
 
         if schedule is not None:
             hour, minute = schedule
-            reminder_time = _calculate_reminder_time(hour=hour, minute=minute)
+            reminder_time = calculate_reminder_time(hour=hour, minute=minute)
             bot.evening_reminder.change_interval(time=reminder_time)
             logger.info(f"Evening reminder set to {reminder_time.hour:02d}:{reminder_time.minute:02d}")
 
-        await _run_scheduled_task("morning attendance check", send_morning_check, bot)
+        await _run_scheduled_task("morning attendance check", send_morning_check, bot, schedule=schedule)
 
     @morning_check.error
     async def morning_check_error(error):
@@ -81,7 +67,7 @@ def _create_morning_check_task(bot):
 
 def _create_evening_reminder_task(bot):
 
-    default_reminder = _calculate_reminder_time(
+    default_reminder = calculate_reminder_time(
         hour=DEFAULT_MEETING_HOUR, minute=DEFAULT_MEETING_MINUTE
     )
 
@@ -120,7 +106,7 @@ async def initialize_task_schedule(bot):
         logger.info("No custom default schedule, using hardcoded times")
         return
 
-    reminder_time = _calculate_reminder_time(hour=default.hour, minute=default.minute)
+    reminder_time = calculate_reminder_time(hour=default.hour, minute=default.minute)
     bot.evening_reminder.change_interval(time=reminder_time)
     logger.info(
         f"Initialized evening reminder to {reminder_time.hour:02d}:{reminder_time.minute:02d} "
