@@ -184,7 +184,7 @@ class RescheduleGroup(app_commands.Group):
 def register_commands(bot):
     """Register slash commands on the bot."""
 
-    @bot.tree.command(name="sync", description="Sync slash commands to Discord.")
+    @bot.tree.command(name="sync", description="슬래시 커맨드를 Discord에 동기화합니다.")
     async def sync(interaction: discord.Interaction):
         """Manually sync slash commands."""
         await interaction.response.defer(ephemeral=True)
@@ -199,14 +199,14 @@ def register_commands(bot):
             await interaction.followup.send(f"❌ Sync failed: {e}", ephemeral=True)
             logger.error(f"Manual command sync failed: {e}")
 
-    @bot.tree.command(name="ping", description="Check bot latency.")
+    @bot.tree.command(name="ping", description="봇의 응답시간을 체크합니다.")
     async def ping(interaction: discord.Interaction):
         """Check bot response latency."""
         latency = round(bot.latency * 1000)
         logger.info(f'{interaction.user} used ping command. Latency: {latency}ms')
         await interaction.response.send_message(f'🏓 Pong! Latency: {latency}ms')
 
-    @bot.tree.command(name="test_morning_check", description="Test morning attendance message. Auto-deletes in 1 min.")
+    @bot.tree.command(name="test_morning_check", description="회고모임 참석 메시지를 테스트합니다. 1분 후 자동 삭제.")
     async def test_morning_check(interaction: discord.Interaction):
         """Send a test morning attendance check."""
         await interaction.response.defer(ephemeral=True)
@@ -226,7 +226,7 @@ def register_commands(bot):
             await interaction.followup.send(f"❌ Failed: {e}", ephemeral=True)
             logger.error(f"Test morning check failed: {e}")
 
-    @bot.tree.command(name="test_evening_reminder", description="Test evening reminder message.")
+    @bot.tree.command(name="test_evening_reminder", description="회고모임 리마인더 메시지를 테스트합니다.")
     async def test_evening_reminder(interaction: discord.Interaction):
         """Send a test evening reminder based on today's attendance data."""
         await interaction.response.defer(ephemeral=True)
