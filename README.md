@@ -1,19 +1,19 @@
 # Hillkeeper Bot
 
-A Discord bot that automates attendance tracking for a small study group's weekly retrospective meetings.
+A Discord bot that automates attendance tracking for a small friend group's weekly retrospective meetings.
 
 ## Why
 
-Our group holds a retrospective every Thursday night. Before this bot, someone had to manually ask "who's coming tonight?" and chase people for responses. Hillkeeper automates the entire flow — morning roll call, response tracking, and evening reminder — so no one has to play secretary.
+Our AC2 alumni group holds a weekly retrospective. Before this bot, someone had to manually ask "who's coming tonight?" and chase people for responses. Hillkeeper automates the entire flow — morning roll call, response tracking, and evening reminder — so no one has to play secretary.
 
 ## How It Works
 
-Every Thursday, the bot runs two scheduled tasks:
+On meeting days, the bot runs two scheduled tasks:
 
-1. **9:00 AM KST** — Posts an attendance check message mentioning the `@retrospective` role. Members react with :white_check_mark: (attending) or :x: (not attending). Selecting one automatically removes the other.
-2. **9:45 PM KST** — Sends a reminder that mentions only the members who confirmed, nudging them to join the voice channel in 15 minutes.
+1. **9:00 AM KST** — Posts an attendance check message mentioning the `@회고` role. Members react with :white_check_mark: (attending) or :x: (not attending). Selecting one automatically removes the other.
+2. **15 min before meeting** — Sends a reminder that mentions only the members who confirmed, nudging them to join the voice channel.
 
-All responses are stored in Redis with a 7-day TTL, so there's no cleanup to worry about.
+The meeting day and time are configurable via slash commands (default: Thursday 22:00 KST). One-time changes, permanent changes, and weekly skips are all supported. All data is stored in Redis with a 7-day TTL.
 
 ## Quick Start
 
@@ -45,23 +45,28 @@ poetry run python main.py
 | Command | Description |
 |---|---|
 | `/ping` | Check bot latency |
+| `/schedule` | View current meeting schedule |
+| `/reschedule once <day> <time>` | Change this week's meeting to a different day/time |
+| `/reschedule default <day> <time>` | Permanently change the default schedule |
+| `/reschedule skip` | Cancel this week's meeting |
 | `/sync` | Manually sync slash commands to Discord |
 | `/test_morning_check` | Send a test attendance message (auto-deletes in 1 min) |
 | `/test_evening_reminder` | Send a test reminder based on today's data |
+
+The `/reschedule` commands require the `@회고` role.
 
 ## Architecture
 
 ```
 bot/ (Discord interface)        ← commands, events, scheduled tasks
   ↓
-attendance/service.py           ← business logic
-  ↓
-attendance/repository.py        ← data access (functional, no classes)
+attendance/                     ← attendance domain (service + repository)
+schedule/                       ← schedule domain (service + repository)
   ↓
 database/redis.py               ← Redis client
 ```
 
-The codebase follows a domain-driven layout. Each layer only depends on the one below it. The repository layer is purely functional — just a collection of async functions, no ORM or class abstractions.
+The codebase follows a domain-driven layout. Each layer only depends on the one below it. The repository layer is purely functional — async functions over frozen dataclasses, no ORM or class abstractions.
 
 ## Deployment
 
@@ -88,5 +93,5 @@ poetry run python scripts/send_notification.py evening
 
 - **Python 3.13+** with **Poetry**
 - **discord.py** — slash commands, scheduled tasks, reaction handling
-- **Redis** — attendance data storage with TTL-based expiration
+- **Redis** — attendance and schedule data with TTL-based expiration
 - **Render** — hosting (web service + key-value store)
