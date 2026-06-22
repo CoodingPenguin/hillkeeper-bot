@@ -3,7 +3,13 @@ import logging
 
 import discord
 
-from ..config import EMOJI_CHECK, EMOJI_CROSS, get_env
+from ..config import (
+    DEFAULT_MEETING_HOUR,
+    DEFAULT_MEETING_MINUTE,
+    EMOJI_CHECK,
+    EMOJI_CROSS,
+    get_env,
+)
 from ..messages import create_morning_check_embed, create_evening_reminder_embed, create_no_participants_embed
 from ..utils import get_users_who_reacted
 from . import repository
@@ -56,7 +62,11 @@ async def _get_participated_members(
         raise ValueError(f"Failed to fetch attendance message: {message_id}") from e
 
 
-async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
+async def _send_reminder_or_empty(
+    channel, members: set, voice_channel_id: str, *,
+    meeting_hour: int,
+    meeting_minute: int,
+):
     """
     Send either a participant reminder or a "no one showed up" message.
 
@@ -64,10 +74,17 @@ async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
         channel: The Discord channel.
         members: Set of participating members.
         voice_channel_id: Voice channel ID string.
+        meeting_hour: Meeting hour to display.
+        meeting_minute: Meeting minute to display.
     """
     if members and len(members) > 1:
         mentions = " ".join([member.mention for member in members])
-        content, embed = create_evening_reminder_embed(mentions, int(voice_channel_id))
+        content, embed = create_evening_reminder_embed(
+            mentions,
+            int(voice_channel_id),
+            meeting_hour=meeting_hour,
+            meeting_minute=meeting_minute,
+        )
         await channel.send(content=content, embed=embed)
         logger.info(f"Evening reminder sent to {len(members)} members")
     else:
@@ -76,7 +93,12 @@ async def _send_reminder_or_empty(channel, members: set, voice_channel_id: str):
         logger.info(f"Not enough participants: {len(members) if members else 0} members")
 
 
-async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: bool = False):
+async def send_morning_check(
+    bot, channel_id: str, role_id: str, *,
+    is_test: bool = False,
+    meeting_hour: int = DEFAULT_MEETING_HOUR,
+    meeting_minute: int = DEFAULT_MEETING_MINUTE,
+):
     """
     Send the morning attendance check message.
 
@@ -89,6 +111,8 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
         channel_id: Target channel ID.
         role_id: Role ID to mention.
         is_test: Whether this is a test invocation.
+        meeting_hour: Meeting hour to display.
+        meeting_minute: Meeting minute to display.
     """
     try:
         channel = _get_channel(bot, channel_id)
@@ -96,7 +120,12 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
             return
 
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
-        content, embed = create_morning_check_embed(int(role_id), int(voice_channel_id))
+        content, embed = create_morning_check_embed(
+            int(role_id),
+            int(voice_channel_id),
+            meeting_hour=meeting_hour,
+            meeting_minute=meeting_minute,
+        )
         message = await channel.send(content=content, embed=embed)
 
         await message.add_reaction(EMOJI_CHECK)
@@ -117,7 +146,11 @@ async def send_morning_check(bot, channel_id: str, role_id: str, *, is_test: boo
         raise
 
 
-async def send_evening_reminder(bot, channel_id: str, role_id: str):
+async def send_evening_reminder(
+    bot, channel_id: str, role_id: str, *,
+    meeting_hour: int = DEFAULT_MEETING_HOUR,
+    meeting_minute: int = DEFAULT_MEETING_MINUTE,
+):
     """
     Send the evening reminder to confirmed participants.
 
@@ -129,6 +162,8 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         bot: The Discord bot instance.
         channel_id: Target channel ID.
         role_id: Role ID to filter by.
+        meeting_hour: Meeting hour to display.
+        meeting_minute: Meeting minute to display.
     """
     try:
         channel = _get_channel(bot, channel_id)
@@ -150,7 +185,13 @@ async def send_evening_reminder(bot, channel_id: str, role_id: str):
         members = await _get_participated_members(channel, latest_message_id, role)
 
         voice_channel_id = get_env('VOICE_CHANNEL_ID', required=True)
-        await _send_reminder_or_empty(channel, members, voice_channel_id)
+        await _send_reminder_or_empty(
+            channel,
+            members,
+            voice_channel_id,
+            meeting_hour=meeting_hour,
+            meeting_minute=meeting_minute,
+        )
 
     except Exception as e:
         logger.error(f"Failed to send evening reminder: {e}")

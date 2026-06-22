@@ -1,6 +1,6 @@
 # Hillkeeper Bot
 
-A Discord bot that automates attendance tracking for a small friend group's weekly retrospective meetings.
+A Discord bot that automates attendance tracking for a small friend group's biweekly retrospective meetings.
 
 ## Why
 
@@ -8,12 +8,12 @@ Our AC2 alumni group holds a weekly retrospective. Before this bot, someone had 
 
 ## How It Works
 
-On meeting days, the bot runs two scheduled tasks:
+Starting July 7, 2026, meetings run every other Tuesday at 22:00 KST. On meeting days, the bot runs two scheduled tasks:
 
 1. **9:00 AM KST** — Posts an attendance check message mentioning the `@회고` role. Members react with :white_check_mark: (attending) or :x: (not attending). Selecting one automatically removes the other.
 2. **15 min before meeting** — Sends a reminder that mentions only the members who confirmed, nudging them to join the voice channel.
 
-The meeting day and time are configurable via slash commands (default: Thursday 22:00 KST). One-time changes, permanent changes, and weekly skips are all supported. All data is stored in Redis with a 7-day TTL.
+The next meeting can be skipped via a slash command. Attendance data is stored in Redis for 7 days, while skip records are kept for 30 days so they remain valid across the biweekly cadence.
 
 ## Quick Start
 
@@ -45,15 +45,13 @@ poetry run python main.py
 | Command | Description |
 |---|---|
 | `/ping` | Check bot latency |
-| `/schedule` | View current meeting schedule |
-| `/reschedule once <day> <time>` | Change this week's meeting to a different day/time |
-| `/reschedule default <day> <time>` | Permanently change the default schedule |
-| `/reschedule skip` | Cancel this week's meeting |
+| `/schedule` | View the next meeting date and time |
+| `/skip` | Cancel the next meeting |
 | `/sync` | Manually sync slash commands to Discord |
-| `/test_morning_check` | Send a test attendance message (auto-deletes in 1 min) |
+| `/test_morning_check` | Send a test attendance message |
 | `/test_evening_reminder` | Send a test reminder based on today's data |
 
-The `/reschedule` commands require the `@회고` role.
+The `/skip` command requires the `@회고` role.
 
 ## Architecture
 

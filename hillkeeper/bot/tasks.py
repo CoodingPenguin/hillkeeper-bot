@@ -5,7 +5,7 @@ from discord.ext import tasks
 
 from ..config import KST, DEFAULT_MEETING_HOUR, DEFAULT_MEETING_MINUTE, calculate_reminder_time, get_env
 from ..attendance.service import send_morning_check, send_evening_reminder
-from ..schedule import repository as schedule_repository
+from ..schedule import service as schedule_service
 
 logger = logging.getLogger('hillkeeper')
 
@@ -24,7 +24,7 @@ async def _run_scheduled_task(task_name: str, service_fn, bot, *, schedule=None)
     """
     if schedule is None:
         now = datetime.datetime.now(KST)
-        schedule = await schedule_repository.get_effective_schedule_for_date(now.date())
+        schedule = await schedule_service.get_effective_schedule_for_date(now.date())
 
     if schedule is None:
         logger.info(f"No meeting scheduled today, skipping {task_name}")
@@ -39,7 +39,14 @@ async def _run_scheduled_task(task_name: str, service_fn, bot, *, schedule=None)
         logger.error("ATTENDANCE_CHANNEL_ID or RETROSPECTIVE_ROLE_ID not set")
         return
 
-    await service_fn(bot, channel_id, role_id)
+    hour, minute = schedule
+    await service_fn(
+        bot,
+        channel_id,
+        role_id,
+        meeting_hour=hour,
+        meeting_minute=minute,
+    )
 
 
 def _create_morning_check_task(bot):
@@ -48,7 +55,7 @@ def _create_morning_check_task(bot):
     async def morning_check():
         """Run daily at 09:00 KST. Check Redis and update evening reminder."""
         now = datetime.datetime.now(KST)
-        schedule = await schedule_repository.get_effective_schedule_for_date(now.date())
+        schedule = await schedule_service.get_effective_schedule_for_date(now.date())
 
         if schedule is not None:
             hour, minute = schedule
@@ -91,24 +98,3 @@ def register_tasks(bot):
     bot.morning_check.start()
     bot.evening_reminder.start()
     logger.info("Tasks started successfully")
-
-
-async def initialize_task_schedule(bot):
-    """
-    Read the default schedule from Redis and set the evening
-    reminder time accordingly. Called once on bot startup.
-
-    Args:
-        bot: The Discord bot instance.
-    """
-    default = await schedule_repository.get_default()
-    if default is None:
-        logger.info("No custom default schedule, using hardcoded times")
-        return
-
-    reminder_time = calculate_reminder_time(hour=default.hour, minute=default.minute)
-    bot.evening_reminder.change_interval(time=reminder_time)
-    logger.info(
-        f"Initialized evening reminder to {reminder_time.hour:02d}:{reminder_time.minute:02d} "
-        f"(meeting at {default.hour:02d}:{default.minute:02d})"
-    )

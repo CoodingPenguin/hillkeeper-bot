@@ -1,7 +1,16 @@
 """Tests for config.py."""
 import pytest
 
-from hillkeeper.config import get_env
+from hillkeeper.config import (
+    DEFAULT_MEETING_INTERVAL_DAYS,
+    DEFAULT_MEETING_START_DATE,
+    get_env,
+)
+
+
+def test_biweekly_schedule_configuration():
+    assert str(DEFAULT_MEETING_START_DATE) == "2026-07-07"
+    assert DEFAULT_MEETING_INTERVAL_DAYS == 14
 
 
 class TestGetEnv:

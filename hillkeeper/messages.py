@@ -1,4 +1,6 @@
 """Discord message templates."""
+import datetime
+
 import discord
 from .config import (
     EMOJI_CHECK, EMOJI_CROSS,
@@ -99,94 +101,51 @@ def create_no_participants_embed() -> discord.Embed:
     return embed
 
 
-def create_schedule_changed_embed(
-    *, day_name: str, hour: int, minute: int
-) -> tuple[str, discord.Embed]:
-    """
-    Build the one-time schedule change notification embed.
-
-    Args:
-        day_name: Korean day name (e.g., "금요일").
-        hour: New meeting hour.
-        minute: New meeting minute.
-
-    Returns:
-        A (content, embed) tuple.
-    """
-    time_str = _format_time(hour, minute)
-    embed = discord.Embed(
-        title="📅 회고 일정 변경",
-        description=f"이번 주 회고 모임 일정이 {day_name} {time_str}로 변경되었습니다!",
-        color=COLOR_GREEN,
-    )
-    return "", embed
-
-
-def create_schedule_skipped_embed(*, day_name: str) -> tuple[str, discord.Embed]:
+def create_schedule_skipped_embed(
+    *, date: datetime.date, day_name: str
+) -> discord.Embed:
     """
     Build the schedule skip notification embed.
 
     Args:
-        day_name: Korean day name of the skipped day.
+        date: Date of the skipped meeting.
+        day_name: Korean day name of the skipped date.
 
     Returns:
-        A (content, embed) tuple.
+        A discord.Embed instance.
     """
     embed = discord.Embed(
         title="📅 회고 일정 취소",
-        description=f"이번 주 회고 모임({day_name})이 취소되었습니다.",
+        description=(
+            f"{date.month}월 {date.day}일 {day_name} 회고 모임이 취소되었습니다."
+        ),
         color=COLOR_GREEN,
     )
-    return "", embed
-
-
-def create_default_changed_embed(
-    *, day_name: str, hour: int, minute: int
-) -> tuple[str, discord.Embed]:
-    """
-    Build the default schedule change notification embed.
-
-    Args:
-        day_name: Korean day name.
-        hour: New default meeting hour.
-        minute: New default meeting minute.
-
-    Returns:
-        A (content, embed) tuple.
-    """
-    time_str = _format_time(hour, minute)
-    embed = discord.Embed(
-        title="📅 기본 일정 변경",
-        description=f"회고 모임 기본 일정이 {day_name} {time_str}로 변경되었습니다!",
-        color=COLOR_GREEN,
-    )
-    return "", embed
+    return embed
 
 
 def create_schedule_view_embed(
-    *, day_name: str, hour: int, minute: int,
-    override_text: str | None = None,
+    *, date: datetime.date, day_name: str, hour: int, minute: int,
 ) -> discord.Embed:
     """
     Build the schedule view embed for /schedule command.
 
     Args:
-        day_name: Korean day name.
+        date: Date of the next meeting.
+        day_name: Korean day name of the next meeting.
         hour: Meeting hour.
         minute: Meeting minute.
-        override_text: Optional text describing this week's override.
 
     Returns:
         A discord.Embed instance.
     """
     time_str = _format_time(hour, minute)
     embed = discord.Embed(
-        title="📋 현재 회고 일정",
-        description=f"기본 일정: **{day_name} {time_str}**",
+        title="📋 다가오는 회고 일정",
+        description=(
+            f"**{date.year}년 {date.month}월 {date.day}일 "
+            f"{day_name} {time_str}**"
+        ),
         color=COLOR_BLUE,
     )
-
-    if override_text:
-        embed.add_field(name="이번 주 변경", value=override_text, inline=False)
-
     return embed

@@ -10,7 +10,7 @@ load_dotenv()
 KST = ZoneInfo("Asia/Seoul")
 
 # Day of week
-THURSDAY = 3
+TUESDAY = 1
 DAY_NAMES: dict[str, int] = {
     "월요일": 0, "화요일": 1, "수요일": 2, "목요일": 3,
     "금요일": 4, "토요일": 5, "일요일": 6,
@@ -18,7 +18,9 @@ DAY_NAMES: dict[str, int] = {
 DAY_NAMES_REVERSE: dict[int, str] = {v: k for k, v in DAY_NAMES.items()}
 
 # Default meeting schedule
-DEFAULT_MEETING_WEEKDAY = THURSDAY
+DEFAULT_MEETING_START_DATE = datetime.date(2026, 7, 7)
+DEFAULT_MEETING_INTERVAL_DAYS = 14
+DEFAULT_MEETING_WEEKDAY = TUESDAY
 DEFAULT_MEETING_HOUR = 22
 DEFAULT_MEETING_MINUTE = 0
 REMINDER_LEAD_MINUTES = 15

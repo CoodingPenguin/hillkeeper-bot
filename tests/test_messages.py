@@ -1,12 +1,12 @@
 """Tests for messages.py."""
+import datetime
+
 from hillkeeper.config import EMOJI_CHECK, EMOJI_CROSS, COLOR_GREEN
 from hillkeeper.messages import (
     create_morning_check_embed,
     create_evening_reminder_embed,
     create_no_participants_embed,
-    create_schedule_changed_embed,
     create_schedule_skipped_embed,
-    create_default_changed_embed,
     create_schedule_view_embed,
 )
 
@@ -94,52 +94,25 @@ class TestCreateNoParticipantsEmbed:
         assert embed.color.value == 0x34A5DB
 
 
-class TestCreateScheduleChangedEmbed:
-
-    def test_contains_day_and_time(self):
-        content, embed = create_schedule_changed_embed(
-            day_name="금요일", hour=22, minute=0
-        )
-        assert "금요일" in embed.description
-        assert "22:00" in embed.description
-
-    def test_embed_color_is_green(self):
-        _, embed = create_schedule_changed_embed(
-            day_name="금요일", hour=22, minute=0
-        )
-        assert embed.color.value == COLOR_GREEN
-
-
 class TestCreateScheduleSkippedEmbed:
 
     def test_contains_cancel_message(self):
-        content, embed = create_schedule_skipped_embed(day_name="목요일")
-        assert "취소" in embed.description
-        assert "목요일" in embed.description
-
-
-class TestCreateDefaultChangedEmbed:
-
-    def test_contains_new_default(self):
-        content, embed = create_default_changed_embed(
-            day_name="수요일", hour=21, minute=0
+        embed = create_schedule_skipped_embed(
+            date=datetime.date(2026, 7, 7), day_name="화요일"
         )
-        assert "수요일" in embed.description
-        assert "21:00" in embed.description
+        assert "취소" in embed.description
+        assert "7월 7일 화요일" in embed.description
+        assert embed.color.value == COLOR_GREEN
 
 
 class TestCreateScheduleViewEmbed:
 
-    def test_shows_default_schedule(self):
+    def test_shows_next_schedule(self):
         embed = create_schedule_view_embed(
-            day_name="목요일", hour=22, minute=0
+            date=datetime.date(2026, 7, 7),
+            day_name="화요일",
+            hour=22,
+            minute=0,
         )
-        assert "목요일" in embed.description
+        assert "2026년 7월 7일 화요일" in embed.description
         assert "22:00" in embed.description
-
-    def test_shows_override_info(self):
-        embed = create_schedule_view_embed(
-            day_name="목요일", hour=22, minute=0,
-            override_text="이번 주: 금요일 22:00로 변경됨"
-        )
-        assert "금요일" in embed.description or "금요일" in str(embed.fields)
